@@ -1,0 +1,18 @@
+services:
+  qdrant:
+    image: qdrant/qdrant:latest
+    restart: always
+    container_name: qdrant
+    ports:
+      - 6333:6333
+      - 6334:6334
+    volumes:
+      - ./qdrant_data:/qdrant/storage
+    configs:
+      - source: qdrant_config
+        target: /qdrant/config/production.yaml
+
+configs:
+  qdrant_config:
+    content: |
+      log_level: INFO
