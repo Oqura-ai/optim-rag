@@ -6,62 +6,64 @@ import { createNewChunk } from "@/lib/chunk-utils"
 import { ChunkList } from "@/components/chunk-list"
 import { MarkdownEditor } from "@/components/markdown-editor"
 import { Toaster } from "@/components/ui/toaster"
-
-// Sample data for demonstration
-const sampleChunks: Chunk[] = [
-  {
-    chunk_id: "chunk_1694123456789_abc123def",
-    chunk_hash: "a1b2c3d4",
-    filename: "report.docx",
-    filetype: "docx",
-    page: 1,
-    data: "# Executive Summary\n\nThis report provides a comprehensive analysis of our quarterly performance. The key findings indicate significant growth in user engagement and revenue streams.\n\n## Key Metrics\n- User growth: 25%\n- Revenue increase: 18%\n- Customer satisfaction: 92%",
-    status: "unchanged",
-    originalHash: "a1b2c3d4",
-  },
-  {
-    chunk_id: "chunk_1694123456790_def456ghi",
-    chunk_hash: "e5f6g7h8",
-    filename: "report.docx",
-    filetype: "docx",
-    page: 1,
-    data: "## Market Analysis\n\nThe current market conditions show favorable trends for our product category. Competition remains strong, but our unique value proposition continues to differentiate us.\n\n### Competitive Landscape\n- Direct competitors: 3 major players\n- Market share: 15% (up from 12%)\n- Growth opportunities in emerging markets",
-    status: "modified",
-    originalHash: "e5f6g7h7",
-    lastEdited: "2025-01-11T10:30:00Z",
-  },
-  {
-    chunk_id: "chunk_1694123456791_ghi789jkl",
-    chunk_hash: "i9j0k1l2",
-    filename: "technical-spec.md",
-    filetype: "md",
-    page: 2,
-    data: '# Technical Specifications\n\n## Architecture Overview\n\nOur system follows a microservices architecture with the following components:\n\n```javascript\nconst apiEndpoint = "https://api.example.com/v1";\nconst authToken = process.env.AUTH_TOKEN;\n```\n\n### Core Services\n1. Authentication Service\n2. Data Processing Service\n3. Notification Service',
-    status: "unchanged",
-    originalHash: "i9j0k1l2",
-  },
-  {
-    chunk_id: "chunk_1694123456792_jkl012mno",
-    chunk_hash: "m3n4o5p6",
-    filename: "user-guide.txt",
-    filetype: "txt",
-    page: 3,
-    data: "Getting Started Guide\n\nWelcome to our platform! This guide will help you get up and running quickly.\n\nStep 1: Create your account\nStep 2: Verify your email\nStep 3: Complete your profile\nStep 4: Start using the features\n\nFor additional help, contact our support team at support@example.com",
-    status: "new",
-    originalHash: "m3n4o5p6",
-    lastEdited: "2025-01-11T11:15:00Z",
-  },
-]
+import { getChunks } from "@/lib/api"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Loader2 } from "lucide-react"
 
 export default function ChunkEditor() {
-  const [chunks, setChunks] = useState<Chunk[]>(sampleChunks)
-  const [selectedChunkId, setSelectedChunkId] = useState<string | null>(sampleChunks[0]?.chunk_id || null)
-  const [wordLimit, setWordLimit] = useState<number>(() => {
-    const maxWords = Math.max(...sampleChunks.map((chunk) => chunk.data.split(/\s+/).length))
-    return maxWords
-  })
+  const [chunks, setChunks] = useState<Chunk[]>([])
+  const [selectedChunkId, setSelectedChunkId] = useState<string | null>(null)
+  const [wordLimit, setWordLimit] = useState<number>(500)
+  const [sessionId, setSessionId] = useState<string>("")
+  const [isLoading, setIsLoading] = useState(false)
+  const [isInitialized, setIsInitialized] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const selectedChunk = chunks.find((chunk) => chunk.chunk_id === selectedChunkId) || null
+
+  const handleLoadChunks = async () => {
+    if (!sessionId.trim()) {
+      setError("Please enter a session ID")
+      return
+    }
+
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const response = await getChunks(sessionId.trim())
+
+      // Transform API chunks to frontend format
+      const transformedChunks: Chunk[] = response.chunks.map((apiChunk, index) => ({
+        chunk_id: `chunk_${Date.now()}_${index}`,
+        chunk_hash: apiChunk.chunk_hash,
+        filename: apiChunk.metadata?.filename || "unknown.txt",
+        filetype: apiChunk.metadata?.extension || "txt",
+        page: apiChunk.metadata?.page_number || 1,
+        data: apiChunk.page_content,
+        status: "unchanged" as const,
+        originalHash: apiChunk.chunk_hash,
+      }))
+
+      setChunks(transformedChunks)
+
+      // Calculate word limit based on largest chunk
+      if (transformedChunks.length > 0) {
+        const maxWords = Math.max(...transformedChunks.map((chunk) => chunk.data.split(/\s+/).length))
+        setWordLimit(maxWords)
+        setSelectedChunkId(transformedChunks[0].chunk_id)
+      }
+
+      setIsInitialized(true)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load chunks")
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const handleSelectChunk = (chunkId: string) => {
     setSelectedChunkId(chunkId)
@@ -88,11 +90,57 @@ export default function ChunkEditor() {
   }
 
   const handleAddChunk = (filename: string, page: number) => {
-    // Updated to accept filename and page parameters
     const newChunk = createNewChunk("# New Chunk\n\nStart editing your content here...", filename, page)
-
     setChunks((prevChunks) => [...prevChunks, newChunk])
     setSelectedChunkId(newChunk.chunk_id)
+  }
+
+  const handleCommitSuccess = () => {
+    // Reset all chunks to unchanged status after successful commit
+    setChunks((prevChunks) =>
+      prevChunks.map((chunk) => ({
+        ...chunk,
+        status: chunk.status === "deleted" ? "deleted" : "unchanged",
+        originalHash: chunk.chunk_hash,
+        lastEdited: undefined,
+      })),
+    )
+  }
+
+  if (!isInitialized) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-background">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Load Chunks</CardTitle>
+            <CardDescription>Enter a session ID to load your chunks from the API</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="sessionId">Session ID</Label>
+              <Input
+                id="sessionId"
+                value={sessionId}
+                onChange={(e) => setSessionId(e.target.value)}
+                placeholder="Enter session ID..."
+                disabled={isLoading}
+              />
+            </div>
+            {error && <div className="text-sm text-red-600 bg-red-50 p-2 rounded">{error}</div>}
+            <Button onClick={handleLoadChunks} disabled={isLoading || !sessionId.trim()} className="w-full">
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Loading Chunks...
+                </>
+              ) : (
+                "Load Chunks"
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (
@@ -106,6 +154,8 @@ export default function ChunkEditor() {
           onAddChunk={handleAddChunk}
           wordLimit={wordLimit}
           onWordLimitChange={setWordLimit}
+          onCommitSuccess={handleCommitSuccess}
+          sessionId={sessionId}
         />
       </div>
 

@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label"
 import { FileText, Plus, Settings, ChevronDown, ChevronRight } from "lucide-react"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { AddChunkDialog } from "./add-chunk-dialog"
+import { CommitChangesDialog } from "./commit-changes-dialog"
 
 interface ChunkListProps {
   chunks: Chunk[]
@@ -19,6 +20,8 @@ interface ChunkListProps {
   onAddChunk: (filename: string, page: number) => void // Updated to accept filename and page
   wordLimit: number
   onWordLimitChange: (limit: number) => void
+  onCommitSuccess?: () => void
+  sessionId: string // Added sessionId prop to pass to commit dialog
 }
 
 export function ChunkList({
@@ -28,6 +31,8 @@ export function ChunkList({
   onAddChunk,
   wordLimit,
   onWordLimitChange,
+  onCommitSuccess,
+  sessionId,
 }: ChunkListProps) {
   const [openFiles, setOpenFiles] = useState<Record<string, boolean>>({})
   const [showSettings, setShowSettings] = useState(false)
@@ -69,7 +74,7 @@ export function ChunkList({
               <Settings size={16} />
             </Button>
             <Button
-              onClick={() => setShowAddDialog(true)} // Open dialog instead of direct add
+              onClick={() => setShowAddDialog(true)}
               size="sm"
               className="bg-primary text-primary-foreground hover:bg-primary/90"
             >
@@ -96,9 +101,12 @@ export function ChunkList({
           </div>
         )}
 
-        <p className="text-sm text-slate-600">
-          {chunks.length} chunks across {Object.keys(groupedChunks).length} files
-        </p>
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-slate-600">
+            {chunks.length} chunks across {Object.keys(groupedChunks).length} files
+          </p>
+          <CommitChangesDialog chunks={chunks} onCommitSuccess={onCommitSuccess} sessionId={sessionId} />
+        </div>
       </div>
 
       <ScrollArea className="flex-1">
