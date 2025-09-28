@@ -166,7 +166,3 @@ For strong perturbations or non-perturbative phenomena (e.g., tunneling in doubl
 * Beyond small perturbations, one must resort to non-perturbative or numerical approaches.
 
 This framework is the workhorse for practical quantum mechanics — from explaining atomic spectra and scattering to designing lasers and understanding quantum control.
-
----
-
-Would you like me to move on and write the final **2–3 pages** on the fourth subtopic — **Quantum Systems & Applications**?

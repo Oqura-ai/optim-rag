@@ -12,18 +12,18 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Loader2, Upload } from "lucide-react"
-import { updateChunks } from "@/lib/api"
-import { transformChunksForBackend } from "@/lib/chunk-transform"
-import type { Chunk } from "@/types/chunk"
+import { updateChunks, uploadFiles } from "@/lib/api"
+import type { Chunk, UploadedFile } from "@/types/chunk"
 import { useToast } from "@/hooks/use-toast"
 
 interface CommitChangesDialogProps {
   chunks: Chunk[]
   onCommitSuccess?: () => void
   sessionId: string
+  uploadedFiles?: UploadedFile[] // Added uploaded files prop
 }
 
-export function CommitChangesDialog({ chunks, onCommitSuccess, sessionId }: CommitChangesDialogProps) {
+export function CommitChangesDialog({ chunks, onCommitSuccess, sessionId, uploadedFiles = []}: CommitChangesDialogProps) {
   const [open, setOpen] = useState(false)
   const [isCommitting, setIsCommitting] = useState(false)
   const { toast } = useToast()
@@ -31,13 +31,22 @@ export function CommitChangesDialog({ chunks, onCommitSuccess, sessionId }: Comm
   const modifiedChunks = chunks.filter((chunk) => chunk.status === "modified").length
   const newChunks = chunks.filter((chunk) => chunk.status === "new").length
   const deletedChunks = chunks.filter((chunk) => chunk.status === "deleted").length
-  const totalChanges = modifiedChunks + newChunks + deletedChunks
+  // const totalChanges = modifiedChunks + newChunks + deletedChunks
+  const newUploadedFiles = uploadedFiles.filter((file) => file.status === "new").length // Count new uploaded files
+  const totalChanges = modifiedChunks + newChunks + deletedChunks + newUploadedFiles // Include uploaded files in total
 
   const handleCommit = async () => {
     setIsCommitting(true)
     try {
-      const transformedChunks = transformChunksForBackend(chunks)
-      await updateChunks(sessionId, transformedChunks)
+      const newFiles = uploadedFiles.filter((f) => f.status === "new")
+      if (newFiles.length > 0) {
+        const filesToUpload = newFiles.map((f) => f.file).filter(Boolean) as File[]
+        if (filesToUpload.length > 0) {
+          await uploadFiles(sessionId, filesToUpload)
+        }
+      }
+
+      await updateChunks(sessionId, chunks)
 
       toast({
         title: "Changes Committed Successfully",
@@ -66,7 +75,7 @@ export function CommitChangesDialog({ chunks, onCommitSuccess, sessionId }: Comm
           Commit Changes ({totalChanges})
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md bg-white">
         <DialogHeader>
           <DialogTitle>Commit Changes to Backend</DialogTitle>
           <DialogDescription>Review your changes before committing them to session: {sessionId}</DialogDescription>

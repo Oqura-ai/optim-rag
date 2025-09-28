@@ -1,7 +1,3 @@
-Here’s a detailed **≈3-page section** on the fourth subtopic — **Quantum Systems & Applications** — to complete the mini-guide:
-
----
-
 ##        Quantum Systems & Applications
 
 So far we have looked at the formalism of states, operators, and dynamics. This section shows how those tools are applied to real physical systems and how the peculiar features of quantum mechanics manifest in technology and nature.
@@ -99,9 +95,3 @@ The four subtopics form a natural progression:
 4. **Quantum Systems & Applications** show how the formalism predicts real phenomena and powers modern technologies.
 
 Together they provide a coherent picture of how quantum mechanics describes the microscopic world and enables the technologies of the future.
-
----
-
-This completes the requested “mini-guide” with roughly 2–3 pages per subtopic.
-
-Would you like me to compile all four sections into a single downloadable PDF for you?

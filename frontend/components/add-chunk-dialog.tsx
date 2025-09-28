@@ -19,7 +19,7 @@ interface AddChunkDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   existingFiles: string[]
-  onAddChunk: (filename: string, page: number) => void
+  onAddChunk: (filename: string, page_number: number) => void
 }
 
 export function AddChunkDialog({ open, onOpenChange, existingFiles, onAddChunk }: AddChunkDialogProps) {
@@ -46,14 +46,14 @@ export function AddChunkDialog({ open, onOpenChange, existingFiles, onAddChunk }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md bg-white">
         <DialogHeader>
           <DialogTitle>Add New Chunk</DialogTitle>
           <DialogDescription>Choose whether to add a chunk to an existing file or create a new file.</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
-          <RadioGroup value={mode} onValueChange={(value) => setMode(value as "existing" | "new")}>
+          <RadioGroup value={mode} onValueChange={(value: any) => setMode(value as "existing" | "new")}>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="existing" id="existing" disabled={existingFiles.length === 0} />
               <Label htmlFor="existing" className={existingFiles.length === 0 ? "text-slate-400" : ""}>
@@ -73,7 +73,7 @@ export function AddChunkDialog({ open, onOpenChange, existingFiles, onAddChunk }
                 <SelectTrigger>
                   <SelectValue placeholder="Choose a file..." />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white">
                   {existingFiles.map((filename) => (
                     <SelectItem key={filename} value={filename}>
                       {filename}

@@ -3,20 +3,21 @@ import hashlib
 from pathlib import Path
 from docx2pdf import convert
 from pdf_ocr import extract_text_from_pdf
+from typing import Union, List, Dict
 
 # ---------------------- HASH GENERATION ----------------------
-def generate_chunk_hash(filename, extension, chunk_id, content):
-    hash_input = f"{filename}-{extension}-{chunk_id}-{content}".encode("utf-8")
+def generate_chunk_hash(filename, filetype, chunk_id, content):
+    hash_input = f"{filename}-{filetype}-{chunk_id}-{content}".encode("utf-8")
     return hashlib.sha256(hash_input).hexdigest()
 
-def build_chunk_metadata(filename, extension, chunk_id, page_number, content, previous_hash=None):
+def build_chunk_metadata(filename, filetype, chunk_id, page_number, content, previous_hash=None):
     return {
         "filename": filename,
-        "extension": extension,
-        "chunk_id": f"{filename}_{extension}_{chunk_id}",  # Hybrid ID
+        "filetype": filetype,
+        "chunk_id": f"{filename}_{filetype}_{chunk_id}",  # Hybrid ID
         "page_number": page_number,
         "page_content": content,
-        "chunk_hash": generate_chunk_hash(filename, extension, chunk_id, content),
+        "chunk_hash": generate_chunk_hash(filename, filetype, chunk_id, content),
         "previous_chunk_hash": previous_hash,
     }
 
@@ -24,7 +25,7 @@ def build_chunk_metadata(filename, extension, chunk_id, page_number, content, pr
 def chunk_docx(file_path, chunk_size=None):
     file_path = Path(file_path)
     filename = file_path.stem
-    extension = file_path.suffix.lower().lstrip(".")
+    filetype = "docx"
     temp_pdf_path = file_path.with_suffix(".pdf")
 
     # Convert DOCX → PDF
@@ -46,7 +47,7 @@ def chunk_docx(file_path, chunk_size=None):
         for i in range(0, len(full_text), chunk_size):
             chunk_data = full_text[i:i + chunk_size]
             page_number = (i // chunk_size) + 1
-            metadata = build_chunk_metadata(filename, extension, chunk_id, page_number, chunk_data, previous_hash)
+            metadata = build_chunk_metadata(filename, filetype, chunk_id, page_number, chunk_data, previous_hash)
             chunks.append(metadata)
             chunk_id += 1
     else:
@@ -55,7 +56,7 @@ def chunk_docx(file_path, chunk_size=None):
 
         for idx, page in enumerate(pages):
             page_number = idx + 1
-            metadata = build_chunk_metadata(filename, extension, chunk_id, page_number, page, previous_hash)
+            metadata = build_chunk_metadata(filename, filetype, chunk_id, page_number, page, previous_hash)
             chunks.append(metadata)
             chunk_id += 1
 
@@ -68,7 +69,7 @@ def chunk_docx(file_path, chunk_size=None):
 def chunk_pdf(file_path, chunk_size=None):
     file_path = Path(file_path)
     filename = file_path.stem
-    extension = file_path.suffix.lower().lstrip(".")
+    filetype = "pdf"
 
     with open(file_path, "rb") as f:
         file_bytes = f.read()
@@ -85,7 +86,7 @@ def chunk_pdf(file_path, chunk_size=None):
         for i in range(0, len(full_text), chunk_size):
             chunk_data = full_text[i:i + chunk_size]
             page_number = (i // chunk_size) + 1
-            metadata = build_chunk_metadata(filename, extension, chunk_id, page_number, chunk_data, previous_hash)
+            metadata = build_chunk_metadata(filename, filetype, chunk_id, page_number, chunk_data, previous_hash)
             chunks.append(metadata)
             chunk_id += 1
     else:
@@ -94,7 +95,7 @@ def chunk_pdf(file_path, chunk_size=None):
 
         for idx, page in enumerate(pages):
             page_number = idx + 1
-            metadata = build_chunk_metadata(filename, extension, chunk_id, page_number, page, previous_hash)
+            metadata = build_chunk_metadata(filename, filetype, chunk_id, page_number, page, previous_hash)
             chunks.append(metadata)
             chunk_id += 1
 
@@ -104,7 +105,7 @@ def chunk_pdf(file_path, chunk_size=None):
 def chunk_md(file_path, delimiter=None, chunk_size=512):
     file_path = Path(file_path)
     filename = file_path.stem
-    extension = file_path.suffix.lower().lstrip(".")
+    filetype = "md"
 
     print(f"[MD CHUNKER] Processing {file_path}")
 
@@ -121,14 +122,14 @@ def chunk_md(file_path, delimiter=None, chunk_size=512):
             part = part.strip()
             if part:
                 page_number = idx + 1
-                metadata = build_chunk_metadata(filename, extension, chunk_id, page_number, f"{delimiter} {part}", previous_hash)
+                metadata = build_chunk_metadata(filename, filetype, chunk_id, page_number, f"{delimiter} {part}", previous_hash)
                 chunks.append(metadata)
                 chunk_id += 1
     else:
         for i in range(0, len(content), chunk_size):
             chunk_data = content[i:i + chunk_size]
             page_number = (i // chunk_size) + 1
-            metadata = build_chunk_metadata(filename, extension, chunk_id, page_number, chunk_data, previous_hash)
+            metadata = build_chunk_metadata(filename, filetype, chunk_id, page_number, chunk_data, previous_hash)
             chunks.append(metadata)
             chunk_id += 1
 
@@ -139,7 +140,7 @@ def chunk_md(file_path, delimiter=None, chunk_size=512):
 def chunk_txt(file_path, delimiter=None, chunk_size=512):
     file_path = Path(file_path)
     filename = file_path.stem
-    extension = file_path.suffix.lower().lstrip(".")
+    filetype = "txt"
 
     print(f"[TXT CHUNKER] Processing {file_path}")
 
@@ -156,14 +157,14 @@ def chunk_txt(file_path, delimiter=None, chunk_size=512):
             part = part.strip()
             if part:
                 page_number = idx + 1
-                metadata = build_chunk_metadata(filename, extension, chunk_id, page_number, part, previous_hash)
+                metadata = build_chunk_metadata(filename, filetype, chunk_id, page_number, part, previous_hash)
                 chunks.append(metadata)
                 chunk_id += 1
     else:
         for i in range(0, len(content), chunk_size):
             chunk_data = content[i:i + chunk_size]
             page_number = (i // chunk_size) + 1
-            metadata = build_chunk_metadata(filename, extension, chunk_id, page_number, chunk_data, previous_hash)
+            metadata = build_chunk_metadata(filename, filetype, chunk_id, page_number, chunk_data, previous_hash)
             chunks.append(metadata)
             chunk_id += 1
 
@@ -171,27 +172,40 @@ def chunk_txt(file_path, delimiter=None, chunk_size=512):
     return chunks
 
 # ---------------------- FILE CATEGORIZATION ----------------------
-def categorize_files(folder_path):
+def categorize_files(
+    input_data: Union[str, Path, List[Union[str, Path]]]
+) -> Dict[str, List[Path]]:
     categorized = {"docx": [], "pdf": [], "md": [], "txt": []}
-    folder = Path(folder_path)
 
-    for file in folder.iterdir():
-        if file.is_file():
-            ext = file.suffix.lower()
-            if ext == ".docx":
-                categorized["docx"].append(file)
-            elif ext == ".pdf":
-                categorized["pdf"].append(file)
-            elif ext == ".md":
-                categorized["md"].append(file)
-            elif ext == ".txt":
-                categorized["txt"].append(file)
+    # Case 1: folder path
+    if isinstance(input_data, (str, Path)):
+        folder = Path(input_data)
+        files = [f for f in folder.iterdir() if f.is_file()]
+    
+    # Case 2: list of file paths
+    elif isinstance(input_data, list):
+        files = [Path(f) for f in input_data if Path(f).is_file()]
+    
+    else:
+        raise ValueError("Input must be a folder path or a list of file paths")
+
+    # Categorize
+    for file in files:
+        ext = file.suffix.lower()
+        if ext == ".docx":
+            categorized["docx"].append(file)
+        elif ext == ".pdf":
+            categorized["pdf"].append(file)
+        elif ext == ".md":
+            categorized["md"].append(file)
+        elif ext == ".txt":
+            categorized["txt"].append(file)
 
     return categorized
 
+
 # ---------------------- PROCESS FILES ----------------------
-def process_chunks(directory_path, chunk_size=None):
-    categorized = categorize_files(directory_path)
+def process_chunks(categorized, chunk_size=None):
     results = []
 
     for ext, files in categorized.items():
@@ -207,9 +221,9 @@ def process_chunks(directory_path, chunk_size=None):
                     results.extend(chunk_md(file))
             elif ext == "txt":
                 if chunk_size is not None:
-                    results.extend(chunk_md(file, chunk_size=chunk_size))
+                    results.extend(chunk_txt(file, chunk_size=chunk_size))
                 else:
-                    results.extend(chunk_md(file))
+                    results.extend(chunk_txt(file))
 
     return results
 

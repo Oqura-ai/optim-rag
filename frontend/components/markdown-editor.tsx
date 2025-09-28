@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import type { Chunk } from "@/types/chunk"
-import { updateChunkStatus } from "@/lib/chunk-utils"
+import { deleteChunk, updateChunkStatus } from "@/lib/chunk-utils"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Card } from "@/components/ui/card"
@@ -20,23 +20,29 @@ import {
   Calendar,
   HashIcon,
   AlertTriangle,
+  Eye,
+  Edit3,
 } from "lucide-react"
 import { ChunkStatusIndicator } from "./chunk-status-indicator"
+import ReactMarkdown from "react-markdown"
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
+import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism"
+import MarkdownRenderer from "./markdown-renderer"
 
 interface MarkdownEditorProps {
   chunk: Chunk | null
   onSave: (chunk: Chunk) => void
-  onDelete: (chunkId: string) => void
   wordLimit: number
 }
 
-export function MarkdownEditor({ chunk, onSave, onDelete, wordLimit }: MarkdownEditorProps) {
+export function MarkdownEditor({ chunk, onSave, wordLimit }: MarkdownEditorProps) {
   const [content, setContent] = useState("")
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  const [isViewMode, setIsViewMode] = useState(false)
 
   useEffect(() => {
     if (chunk) {
-      setContent(chunk.data)
+      setContent(chunk.page_content)
       setHasUnsavedChanges(false)
     }
   }, [chunk])
@@ -54,9 +60,17 @@ export function MarkdownEditor({ chunk, onSave, onDelete, wordLimit }: MarkdownE
     setHasUnsavedChanges(false)
   }
 
+  const handleDeleteChunk = () => {
+    if (!chunk) return
+
+    const updatedChunk = deleteChunk(chunk)
+    onSave(updatedChunk)
+    setHasUnsavedChanges(false)
+  }
+
   const handleRevert = () => {
     if (chunk) {
-      setContent(chunk.data)
+      setContent(chunk.page_content)
       setHasUnsavedChanges(false)
     }
   }
@@ -114,6 +128,15 @@ export function MarkdownEditor({ chunk, onSave, onDelete, wordLimit }: MarkdownE
           </div>
 
           <div className="flex items-center gap-2">
+            <Button
+              onClick={() => setIsViewMode(!isViewMode)}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              {isViewMode ? <Edit3 size={16} /> : <Eye size={16} />}
+              {isViewMode ? "Edit" : "Preview"}
+            </Button>
             <Button onClick={handleRevert} variant="outline" size="sm" disabled={!hasUnsavedChanges}>
               <RotateCcw size={16} />
               Revert
@@ -127,44 +150,48 @@ export function MarkdownEditor({ chunk, onSave, onDelete, wordLimit }: MarkdownE
               <Save size={16} />
               Save
             </Button>
-            <Button onClick={() => onDelete(chunk.chunk_id)} variant="destructive" size="sm">
+            <Button onClick={handleDeleteChunk} variant="destructive" size="sm">
               <Trash2 size={16} />
               Delete
             </Button>
           </div>
         </div>
 
-        {/* Markdown Toolbar */}
-        <div className="flex items-center gap-1 p-2 bg-muted rounded-md">
-          <Button variant="ghost" size="sm" onClick={() => insertMarkdown("**", "**")} className="h-8 w-8 p-0">
-            <Bold size={14} />
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => insertMarkdown("*", "*")} className="h-8 w-8 p-0">
-            <Italic size={14} />
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => insertMarkdown("`", "`")} className="h-8 w-8 p-0">
-            <Code size={14} />
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => insertMarkdown("# ")} className="h-8 w-8 p-0">
-            <Hash size={14} />
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => insertMarkdown("- ")} className="h-8 w-8 p-0">
-            <List size={14} />
-          </Button>
-        </div>
+        {!isViewMode && (
+          <div className="flex items-center gap-1 p-2 bg-muted rounded-md">
+            <Button variant="ghost" size="sm" onClick={() => insertMarkdown("**", "**")} className="h-8 w-8 p-0">
+              <Bold size={14} />
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => insertMarkdown("*", "*")} className="h-8 w-8 p-0">
+              <Italic size={14} />
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => insertMarkdown("`", "`")} className="h-8 w-8 p-0">
+              <Code size={14} />
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => insertMarkdown("# ")} className="h-8 w-8 p-0">
+              <Hash size={14} />
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => insertMarkdown("- ")} className="h-8 w-8 p-0">
+              <List size={14} />
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="flex-1 flex">
-        {/* Editor */}
         <div className="flex-1 p-4">
-          <Textarea
-            value={content}
-            onChange={(e) => handleContentChange(e.target.value)}
-            placeholder="Enter your markdown content here..."
-            className={`h-full resize-none font-mono text-sm leading-relaxed ${
-              isOverLimit ? "border-destructive focus:border-destructive" : ""
-            }`}
-          />
+          {isViewMode ? (
+              <MarkdownRenderer content={content} />
+          ) : (
+            <Textarea
+              value={content}
+              onChange={(e) => handleContentChange(e.target.value)}
+              placeholder="Enter your markdown content here..."
+              className={`h-full resize-none font-mono text-sm leading-relaxed ${
+                isOverLimit ? "border-destructive focus:border-destructive" : ""
+              }`}
+            />
+          )}
         </div>
 
         <div className="w-80 p-4 border-l border-border bg-slate-50">
@@ -189,7 +216,7 @@ export function MarkdownEditor({ chunk, onSave, onDelete, wordLimit }: MarkdownE
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-600">Page:</span>
-                    <span className="text-slate-900">{chunk.page}</span>
+                    <span className="text-slate-900">{chunk.page_number}</span>
                   </div>
                 </div>
               </div>
@@ -206,14 +233,6 @@ export function MarkdownEditor({ chunk, onSave, onDelete, wordLimit }: MarkdownE
                   <div className="flex justify-between">
                     <span className="text-slate-600">Chunk ID:</span>
                     <span className="font-mono text-xs text-slate-900">{chunk.chunk_id.slice(0, 16)}...</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-600">Current Hash:</span>
-                    <span className="font-mono text-xs text-slate-900">{chunk.chunk_hash}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-600">Original Hash:</span>
-                    <span className="font-mono text-xs text-slate-900">{chunk.originalHash}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-600">Status:</span>
