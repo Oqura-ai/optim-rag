@@ -109,7 +109,7 @@ def remove_data_from_store(session_id:str) -> str:
 #     points_to_upsert = []
 #     new_point_id = 0
 
-#     deleted_ids = []
+#     deleted_id = []
 
 #     # --- 1. Fetch existing chunks for this session ---
 #     existing_chunks, _ = client.scroll(
@@ -204,7 +204,7 @@ def remove_data_from_store(session_id:str) -> str:
 
 def rag_pipeline_setup(session_id, documents, is_new=False):
     points_to_upsert = []
-    deleted_ids = []
+    deleted_hashes = []
 
     # --- 1. Fetch existing chunks for this session ---
     existing_chunks, _ = client.scroll(
@@ -240,22 +240,12 @@ def rag_pipeline_setup(session_id, documents, is_new=False):
         else:
             return uuid.uuid4().hex
 
-    # Keep track of hashes seen inside this uploaded batch (avoid intra-batch dupes)
-    seen_in_doc = set()
-
     # --- 2. Iterate over incoming documents ---
     for chunk in documents:
         text = chunk.get("page_content", "")
         chunk_hash = chunk.get("chunk_hash")
         previous_hash = chunk.get("previous_hash")
         status = chunk.get("status")
-        chunk_id = chunk.get("id")
-
-        # Duplicate detection within this batch
-        if chunk_hash in seen_in_doc:
-            print(f"[DUPLICATE-BATCH] skipping duplicate in same batch {chunk_hash}")
-            continue
-        seen_in_doc.add(chunk_hash)
 
         # If this is a new-file upload, we always append new points (do not reuse existing IDs)
         if is_new:
@@ -267,61 +257,62 @@ def rag_pipeline_setup(session_id, documents, is_new=False):
             print(f"[NEW-UPLOAD] Appending chunk {chunk_hash} as id={point_id}")
 
         else:
-            # non-upload mode: preserve original update/delete behavior
-            if chunk_hash in existing_map:
+            if status == "deleted":
+                deleted_hashes.append(chunk_hash)
+
+            elif status == "modified":
+                old_point = existing_map[previous_hash]
+                point_id = old_point.id
+                print(f"[UPDATE] Replacing chunk {previous_hash} -> {chunk_hash} using id {point_id}")
+
+            # # non-upload mode: preserve original update/delete behavior
+            elif status == "unchanged":
                 # Drift detection: check content and metadata differences
                 existing_payload = existing_map[chunk_hash].payload
-                text_changed = existing_payload.get("page_content") != text
+                # text_changed = existing_payload.get("page_content") != text
                 metadata_changed = any(
                     existing_payload.get(k) != v
                     for k, v in chunk.items()
                 )
-                if metadata_changed or text_changed:
+                if metadata_changed:
                     print(f"[DRIFT] Metadata/content changed for {chunk_hash}, id={existing_map[chunk_hash].id}")
                     point_id = existing_map[chunk_hash].id
                 else:
                     # unchanged -> skip
                     continue
 
-            elif previous_hash and previous_hash in existing_map:
-                old_point = existing_map[previous_hash]
-                point_id = old_point.id
-                print(f"[UPDATE] Replacing chunk {previous_hash} -> {chunk_hash} using id {point_id}")
-
-            elif status == "deleted":
-                # mark for deletion: prefer finding by chunk_id or previous_hash
-                old_point = None
-                if chunk_id:
-                    old_point = next((c for c in existing_chunks if str(c.id) == str(chunk_id)), None)
-                if not old_point and previous_hash:
-                    old_point = existing_map.get(previous_hash)
-                if old_point:
-                    deleted_ids.append(old_point.id)
-                continue
-
-            else:
+            elif status == "new":
                 # truly new chunk in update-mode
                 point_id = gen_new_id()
                 print(f"[NEW] Inserting new chunk {chunk_hash} as id={point_id}")
 
         # Build/upsert the new point
-        point = models.PointStruct(
-            id=point_id,
-            vector={
-                "all-MiniLM-L6-v2": models.Document(text=text, model=dense_model_name),
-                "bm25": models.Document(text=text, model=bm25_model_name),
-                "colbertv2.0": models.Document(text=text, model=late_interaction_model_name),
-            },
-            payload={"group_id": session_id, **chunk},
-        )
-        points_to_upsert.append(point)
+        if status != "deleted":
+            point = models.PointStruct(
+                id=point_id,
+                vector={
+                    "all-MiniLM-L6-v2": models.Document(text=text, model=dense_model_name),
+                    "bm25": models.Document(text=text, model=bm25_model_name),
+                    "colbertv2.0": models.Document(text=text, model=late_interaction_model_name),
+                },
+                payload={"group_id": session_id, **chunk},
+            )
+            points_to_upsert.append(point)
 
     # --- 3. Detect deleted chunks (only when deletions were requested) ---
-    if deleted_ids:
-        print(f"[DELETE] Removing {len(deleted_ids)} chunks from DB")
+    if deleted_hashes:
+        # Build OR (should) conditions — one per hash
+        should_conditions = [
+            models.FieldCondition(key="chunk_hash", match=models.MatchValue(value=h))
+            for h in deleted_hashes
+        ]
+
+        print(f"[DELETE] Removing {len(deleted_hashes)} chunks from DB (by payload chunk_hash)")
         client.delete(
             collection_name=collection_name,
-            points_selector=models.PointIdsList(points=deleted_ids),
+            points_selector=models.FilterSelector(
+                filter=models.Filter(should=should_conditions)
+            ),
         )
 
     # --- 4. Perform upsert for new/updated points ---

@@ -27,7 +27,7 @@ def load_default_data():
         folder = "../data-source"
         print(f"[BOOTSTRAP] Processing folder: {folder}")
         categorized = categorize_files(folder)
-        output = process_chunks(categorized, chunk_size=None)
+        output = process_chunks(categorized, chunk_size=None, delimeter=None, buffer=8)
         rag_pipeline_setup("1", output, True)  # session_id = "1"
         print("[BOOTSTRAP] Default dataset loaded into Qdrant")
 

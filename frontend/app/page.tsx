@@ -113,6 +113,23 @@ export default function ChunkEditor() {
     setUploadedFiles((prevFiles) => prevFiles.filter((file) => file.id !== fileId))
   }
 
+  const handleDeleteFile = (filename: string) => {
+    setChunks((prevChunks) =>
+      prevChunks.map((chunk) => (chunk.filename === filename ? { ...chunk, status: "deleted" as const } : chunk)),
+    )
+
+    // If the selected chunk belongs to the deleted file, select another chunk
+    const selectedChunk = chunks.find((chunk) => chunk.chunk_id === selectedChunkId)
+    if (selectedChunk && selectedChunk.filename === filename) {
+      const remainingChunks = chunks.filter((chunk) => chunk.filename !== filename && chunk.status !== "deleted")
+      if (remainingChunks.length > 0) {
+        setSelectedChunkId(remainingChunks[0].chunk_id)
+      } else {
+        setSelectedChunkId(null)
+      }
+    }
+  }
+
   const handleCommitSuccess = () => {
     setChunks((prevChunks) =>
       prevChunks
@@ -197,6 +214,7 @@ export default function ChunkEditor() {
           uploadedFiles={uploadedFiles} // Pass uploaded files
           onFileUpload={handleFileUpload} // Pass file upload handler
           onFileDelete={handleFileDelete} // Added file delete handler
+          onDeleteFile={handleDeleteFile} // Added file deletion handler
         />
       </div>
 

@@ -22,7 +22,8 @@ def build_chunk_metadata(filename, filetype, chunk_id, page_number, content, pre
     }
 
 # ---------------------- DOCX CHUNKER ----------------------
-def chunk_docx(file_path, chunk_size=None):
+
+def chunk_docx(file_path, chunk_size=None, buffer=8):
     file_path = Path(file_path)
     filename = file_path.stem
     filetype = "docx"
@@ -40,12 +41,19 @@ def chunk_docx(file_path, chunk_size=None):
     previous_hash = None
 
     if chunk_size:
-        print(f"[DOCX CHUNKER] Splitting by custom size: {chunk_size} chars")
+        print(f"[DOCX CHUNKER] Splitting by {chunk_size} words with {buffer} word overlap")
         pages = extract_text_from_pdf(file_bytes)
-        full_text = "".join(pages)
+        full_text = " ".join(pages)
 
-        for i in range(0, len(full_text), chunk_size):
-            chunk_data = full_text[i:i + chunk_size]
+        words = full_text.split()
+        total_words = len(words)
+
+        for i in range(0, total_words, chunk_size):
+            start = i
+            end = min(i + chunk_size + buffer, total_words)
+            chunk_words = words[start:end]
+            chunk_data = " ".join(chunk_words)
+
             page_number = (i // chunk_size) + 1
             metadata = build_chunk_metadata(filename, filetype, chunk_id, page_number, chunk_data, previous_hash)
             chunks.append(metadata)
@@ -66,7 +74,7 @@ def chunk_docx(file_path, chunk_size=None):
     return chunks
 
 # ---------------------- PDF CHUNKER ----------------------
-def chunk_pdf(file_path, chunk_size=None):
+def chunk_pdf(file_path, chunk_size=None, buffer=8):
     file_path = Path(file_path)
     filename = file_path.stem
     filetype = "pdf"
@@ -79,12 +87,19 @@ def chunk_pdf(file_path, chunk_size=None):
     previous_hash = None
 
     if chunk_size:
-        print(f"[PDF CHUNKER] Splitting by custom size: {chunk_size} chars")
+        print(f"[PDF CHUNKER] Splitting by {chunk_size} words with {buffer} word overlap")
         pages = extract_text_from_pdf(file_bytes)
-        full_text = "".join(pages)
+        full_text = " ".join(pages)
 
-        for i in range(0, len(full_text), chunk_size):
-            chunk_data = full_text[i:i + chunk_size]
+        words = full_text.split()
+        total_words = len(words)
+
+        for i in range(0, total_words, chunk_size):
+            start = i
+            end = min(i + chunk_size + buffer, total_words)
+            chunk_words = words[start:end]
+            chunk_data = " ".join(chunk_words)
+
             page_number = (i // chunk_size) + 1
             metadata = build_chunk_metadata(filename, filetype, chunk_id, page_number, chunk_data, previous_hash)
             chunks.append(metadata)
@@ -102,7 +117,7 @@ def chunk_pdf(file_path, chunk_size=None):
     return chunks
 
 # ---------------------- MD CHUNKER ----------------------
-def chunk_md(file_path, delimiter=None, chunk_size=512):
+def chunk_md(file_path, delimiter=None, chunk_size=512, buffer=8):
     file_path = Path(file_path)
     filename = file_path.stem
     filetype = "md"
@@ -122,14 +137,27 @@ def chunk_md(file_path, delimiter=None, chunk_size=512):
             part = part.strip()
             if part:
                 page_number = idx + 1
-                metadata = build_chunk_metadata(filename, filetype, chunk_id, page_number, f"{delimiter} {part}", previous_hash)
+                metadata = build_chunk_metadata(
+                    filename, filetype, chunk_id, page_number, f"{delimiter} {part}", previous_hash
+                )
                 chunks.append(metadata)
                 chunk_id += 1
     else:
-        for i in range(0, len(content), chunk_size):
-            chunk_data = content[i:i + chunk_size]
+        words = content.split()
+        total_words = len(words)
+
+        print(f"[MD CHUNKER] Splitting by {chunk_size} words with {buffer} word overlap")
+
+        for i in range(0, total_words, chunk_size):
+            start = i
+            end = min(i + chunk_size + buffer, total_words)
+            chunk_words = words[start:end]
+            chunk_data = " ".join(chunk_words)
+
             page_number = (i // chunk_size) + 1
-            metadata = build_chunk_metadata(filename, filetype, chunk_id, page_number, chunk_data, previous_hash)
+            metadata = build_chunk_metadata(
+                filename, filetype, chunk_id, page_number, chunk_data, previous_hash
+            )
             chunks.append(metadata)
             chunk_id += 1
 
@@ -137,7 +165,7 @@ def chunk_md(file_path, delimiter=None, chunk_size=512):
     return chunks
 
 # ---------------------- TXT CHUNKER ----------------------
-def chunk_txt(file_path, delimiter=None, chunk_size=512):
+def chunk_txt(file_path, delimiter=None, chunk_size=512, buffer=8):
     file_path = Path(file_path)
     filename = file_path.stem
     filetype = "txt"
@@ -157,14 +185,27 @@ def chunk_txt(file_path, delimiter=None, chunk_size=512):
             part = part.strip()
             if part:
                 page_number = idx + 1
-                metadata = build_chunk_metadata(filename, filetype, chunk_id, page_number, part, previous_hash)
+                metadata = build_chunk_metadata(
+                    filename, filetype, chunk_id, page_number, part, previous_hash
+                )
                 chunks.append(metadata)
                 chunk_id += 1
     else:
-        for i in range(0, len(content), chunk_size):
-            chunk_data = content[i:i + chunk_size]
+        words = content.split()
+        total_words = len(words)
+
+        print(f"[TXT CHUNKER] Splitting by {chunk_size} words with {buffer} word overlap")
+
+        for i in range(0, total_words, chunk_size):
+            start = i
+            end = min(i + chunk_size + buffer, total_words)
+            chunk_words = words[start:end]
+            chunk_data = " ".join(chunk_words)
+
             page_number = (i // chunk_size) + 1
-            metadata = build_chunk_metadata(filename, filetype, chunk_id, page_number, chunk_data, previous_hash)
+            metadata = build_chunk_metadata(
+                filename, filetype, chunk_id, page_number, chunk_data, previous_hash
+            )
             chunks.append(metadata)
             chunk_id += 1
 
@@ -205,31 +246,24 @@ def categorize_files(
 
 
 # ---------------------- PROCESS FILES ----------------------
-def process_chunks(categorized, chunk_size=None):
+def process_chunks(categorized, chunk_size=None, delimeter=None, buffer=8):
     results = []
 
     for ext, files in categorized.items():
         for file in files:
             if ext == "docx":
-                results.extend(chunk_docx(file, chunk_size=chunk_size))
+                results.extend(chunk_docx(file, chunk_size=chunk_size, buffer=buffer))
             elif ext == "pdf":
-                results.extend(chunk_pdf(file, chunk_size=chunk_size))
+                results.extend(chunk_pdf(file, chunk_size=chunk_size, buffer=buffer))
             elif ext == "md":
                 if chunk_size is not None:
-                    results.extend(chunk_md(file, chunk_size=chunk_size))
+                    results.extend(chunk_md(file, chunk_size=chunk_size, delimeter=delimeter, buffer=buffer))
                 else:
                     results.extend(chunk_md(file))
             elif ext == "txt":
                 if chunk_size is not None:
-                    results.extend(chunk_txt(file, chunk_size=chunk_size))
+                    results.extend(chunk_txt(file, chunk_size=chunk_size, delimeter=delimeter, buffer=buffer))
                 else:
                     results.extend(chunk_txt(file))
 
     return results
-
-# ---------------------- MAIN ----------------------
-if __name__ == "__main__":
-    folder = "../data-source"
-    output = process_chunks(folder, chunk_size=None)  # Set chunk_size=int or None
-    print("\nFinal processed results:")
-    print(output[2])

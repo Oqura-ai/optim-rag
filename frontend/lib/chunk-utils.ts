@@ -14,12 +14,13 @@ function generateChunkHash(
 
 export function updateChunkStatus(chunk: Chunk, newContent: string): Chunk {
   const newHash = generateChunkHash(chunk.filename, chunk.filetype, chunk.chunk_id, newContent)
-  const isChanged = newHash !== chunk.originalHash
+  const isChanged = newHash !== chunk.chunk_hash
 
   return {
     ...chunk,
     page_content: newContent,
     chunk_hash: newHash,
+    previous_hash: chunk.chunk_hash,
     status: isChanged ? "modified" : "unchanged",
     lastEdited: new Date().toISOString(),
   }
