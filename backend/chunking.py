@@ -22,7 +22,6 @@ def build_chunk_metadata(filename, filetype, chunk_id, page_number, content, pre
     }
 
 # ---------------------- DOCX CHUNKER ----------------------
-
 def chunk_docx(file_path, chunk_size=None, buffer=8):
     file_path = Path(file_path)
     filename = file_path.stem

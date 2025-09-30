@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Chunk, UploadedFile } from "@/types/chunk"
 import { createNewChunk } from "@/lib/chunk-utils";
 import { ChunkList } from "@/components/chunk-list";
@@ -17,7 +17,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
+import { listSessions, createSession as feCreateSession } from "@/lib/api-session";
+import { deleteSession as feDeleteSession } from "@/lib/api";
 
 export default function ChunkEditor() {
   const [chunks, setChunks] = useState<Chunk[]>([]);
@@ -28,6 +30,20 @@ export default function ChunkEditor() {
   const [isInitialized, setIsInitialized] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]) // Added uploaded files state
+
+  type SessionMeta = { id: string; createdAt: string; name?: string; archiveName?: string; archiveSize?: number }
+  const [sessions, setSessions] = useState<SessionMeta[]>([])
+  const [newSessionZip, setNewSessionZip] = useState<File | null>(null)
+  const [newSessionName, setNewSessionName] = useState<string>("")
+  const [isSessionOp, setIsSessionOp] = useState<boolean>(false)
+
+  useEffect(() => {
+    // Load sessions from front-end store on first render of popup
+    ;(async () => {
+      const all = await listSessions()
+      setSessions(all)
+    })()
+  }, [])
 
   const selectedChunk =
     chunks.find((chunk) => chunk.chunk_id === selectedChunkId) || null;
@@ -155,34 +171,141 @@ export default function ChunkEditor() {
   if (!isInitialized) {
     return (
       <div className="h-screen flex items-center justify-center bg-background">
-        <Card className="w-full max-w-md">
+        <Card className="w-full max-w-2xl">
           <CardHeader>
-            <CardTitle>Load Chunks</CardTitle>
+            <CardTitle>Session Manager</CardTitle>
             <CardDescription>
-              Enter a session ID to load your chunks from the API
+              Create, list, or delete sessions on the front-end. You can still load any session by ID.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="sessionId">Session ID</Label>
+          <CardContent className="space-y-6">
+            {/* Existing Sessions */}
+            <section>
+              <h3 className="text-sm font-medium mb-2">Existing Sessions</h3>
+              <div className="rounded border p-3 max-h-56 overflow-auto">
+                {sessions.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No sessions yet. Create one below.</p>
+                ) : (
+                  <ul className="space-y-2">
+                    {sessions.map((s) => (
+                      <li key={s.id} className="flex items-center justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="text-sm font-medium text-pretty">{s.name || s.id}</div>
+                          <div className="text-xs text-muted-foreground truncate">
+                            ID: {s.id} • {new Date(s.createdAt).toLocaleString()}
+                            {s.archiveName ? ` • ZIP: ${s.archiveName}` : ""}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => setSessionId(s.id)}
+                            title="Use this session ID"
+                          >
+                            Use
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="icon"
+                            onClick={async () => {
+                              try {
+                                setIsSessionOp(true)
+                                await feDeleteSession(s.id)
+                                const all = await listSessions()
+                                setSessions(all)
+                                if (sessionId === s.id) setSessionId("")
+                              } finally {
+                                setIsSessionOp(false)
+                              }
+                            }}
+                            disabled={isSessionOp}
+                            aria-label={`Delete session ${s.name || s.id}`}
+                            title="Delete session"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </section>
+
+            {/* Create New Session */}
+            <section className="space-y-3">
+              <h3 className="text-sm font-medium">Create New Session</h3>
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="newSessionName">Session Name (optional)</Label>
+                  <Input
+                    id="newSessionName"
+                    value={newSessionName}
+                    onChange={(e) => setNewSessionName(e.target.value)}
+                    placeholder="e.g., Q3 Reports"
+                    disabled={isSessionOp}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="zipUpload">Upload ZIP</Label>
+                  <Input
+                    id="zipUpload"
+                    type="file"
+                    accept=".zip"
+                    onChange={(e) => setNewSessionZip(e.target.files?.[0] || null)}
+                    disabled={isSessionOp}
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end">
+                <Button
+                  onClick={async () => {
+                    if (!newSessionZip) {
+                      setError("Please select a ZIP file to create a session")
+                      return
+                    }
+                    try {
+                      setError(null)
+                      setIsSessionOp(true)
+                      const created = await feCreateSession(newSessionZip, newSessionName)
+                      const all = await listSessions()
+                      setSessions(all)
+                      setSessionId(created.id) // Prefill to allow quick load
+                    } catch (e) {
+                      setError(e instanceof Error ? e.message : "Failed to create session")
+                    } finally {
+                      setIsSessionOp(false)
+                    }
+                  }}
+                  disabled={isSessionOp || !newSessionZip}
+                >
+                  {isSessionOp ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Creating...
+                    </>
+                  ) : (
+                    "Create Session"
+                  )}
+                </Button>
+              </div>
+            </section>
+
+            {/* Manual Session ID + Load */}
+            <section className="space-y-2">
+              <Label htmlFor="sessionId">Manual Session ID</Label>
               <Input
                 id="sessionId"
                 value={sessionId}
                 onChange={(e) => setSessionId(e.target.value)}
                 placeholder="Enter session ID..."
-                disabled={isLoading}
+                disabled={isLoading || isSessionOp}
               />
-            </div>
-            {error && (
-              <div className="text-sm text-red-600 bg-red-50 p-2 rounded">
-                {error}
-              </div>
-            )}
-            <Button
-              onClick={handleLoadChunks}
-              disabled={isLoading || !sessionId.trim()}
-              className="w-full"
-            >
+            </section>
+
+            {error && <div className="text-sm text-red-600 bg-red-50 p-2 rounded">{error}</div>}
+
+            <Button onClick={handleLoadChunks} disabled={isLoading || !sessionId.trim()} className="w-full">
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -195,7 +318,7 @@ export default function ChunkEditor() {
           </CardContent>
         </Card>
       </div>
-    );
+    )
   }
 
   return (
@@ -203,7 +326,7 @@ export default function ChunkEditor() {
       {/* Left Panel - Chunk List */}
       <div className="w-fit flex-shrink-0">
         <ChunkList
-          chunks={chunks}
+          chunks={chunks.filter((chunk) => chunk.status !== "deleted")}
           selectedChunkId={selectedChunkId}
           onSelectChunk={handleSelectChunk}
           onAddChunk={handleAddChunk}
@@ -211,9 +334,9 @@ export default function ChunkEditor() {
           onWordLimitChange={setWordLimit}
           onCommitSuccess={handleCommitSuccess}
           sessionId={sessionId}
-          uploadedFiles={uploadedFiles} // Pass uploaded files
-          onFileUpload={handleFileUpload} // Pass file upload handler
-          onFileDelete={handleFileDelete} // Added file delete handler
+          uploadedFiles={uploadedFiles}
+          onFileUpload={handleFileUpload}
+          onFileDelete={handleFileDelete}
           onDeleteFile={handleDeleteFile} // Added file deletion handler
         />
       </div>
@@ -229,5 +352,5 @@ export default function ChunkEditor() {
 
       <Toaster />
     </div>
-  );
+  )
 }
