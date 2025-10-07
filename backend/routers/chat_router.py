@@ -13,7 +13,7 @@ router = APIRouter()
 @router.post("/chat/send", response_model=SendChatResponse)
 def send_chat(req: SendChatRequest):
     session_id = req.session_id
-    model = "gpt-5"  # default to OpenAI
+    model = req.model or "ollama-local"  # default to OpenAI
 
     # Get last user message
     last_user = next((m for m in reversed(req.messages) if m.role == "user"), None)

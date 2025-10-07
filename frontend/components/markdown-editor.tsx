@@ -206,8 +206,8 @@ export function MarkdownEditor({ chunk, onSave, wordLimit }: MarkdownEditorProps
                 </div>
 
                 <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-slate-600">Filename:</span>
+                  <div className="flex flex-wrap justify-between">
+                    <span className="text-slate-600">Filename: </span>
                     <span className="font-mono text-slate-900">{chunk.filename}</span>
                   </div>
                   <div className="flex justify-between">
@@ -232,7 +232,7 @@ export function MarkdownEditor({ chunk, onSave, wordLimit }: MarkdownEditorProps
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-slate-600">Chunk ID:</span>
-                    <span className="font-mono text-xs text-slate-900">{chunk.chunk_id.slice(0, 16)}...</span>
+                    <span className="font-mono text-xs text-slate-900">{chunk.chunk_id}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-600">Status:</span>

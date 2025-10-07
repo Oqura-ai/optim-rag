@@ -61,7 +61,7 @@ export default function ChatPage() {
     setIsSending(true);
     await mutate(
       async () => {
-        const res = await sendChat(sessionId, nextMessages);
+        const res = await sendChat(sessionId, nextMessages, model);
         const finalMessages =
           res.messages && res.messages.length > 0
             ? res.messages
@@ -204,14 +204,10 @@ export default function ChatPage() {
           <select
               value={model}
               onChange={(e) => setModel(e.target.value as ChatModel)}
-              className="bg-gray-400 text-black font-bold outline-none"
+              className="bg-gray-400 text-black font-bold outline-none rounded-xl"
             >
-              {/* <option value="ollama-local">Ollama (Local)</option> */}
               <option value="gpt-5">gpt-5</option>
-              <option value="gpt-4.1">gpt-4.1</option>
-              <option value="gpt-4.1-mini">gpt-4.1-mini</option>
-              <option value="gpt-4o">gpt-4o</option>
-              <option value="gpt-4o-mini">gpt-4o-mini</option>
+              <option value="ollama-local">ollama-server</option>
           </select>
         </div>
         <Button
