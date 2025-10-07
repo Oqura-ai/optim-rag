@@ -38,16 +38,11 @@ function writeSessions(sessions: any) {
   }
 }
 
-function delay(ms = 400) {
-  return new Promise((res) => setTimeout(res, ms))
-}
-
 /**
  * List all sessions (front-end only)
  * @returns {Promise<SessionMeta[]>}
  */
 export async function listSessions() {
-  await delay()
   try {
     const res = await fetch(`${API_URL}/sessions`, { cache: "no-store" })
     if (res.ok) {
@@ -70,8 +65,6 @@ export async function listSessions() {
  * @returns {Promise<SessionMeta>}
  */
 export async function createSession(zipFile: any, name: any) {
-  await delay()
-
   // Try backend first if a zip is provided
   if (zipFile instanceof File) {
     try {
@@ -130,7 +123,6 @@ export async function createSession(zipFile: any, name: any) {
  * @returns {Promise<void>}
  */
 export async function deleteSession(id: any) {
-  await delay()
   // Update local store optimistically
   const sessions = readSessions().filter((s: any) => s.id !== id)
   writeSessions(sessions)
@@ -157,7 +149,6 @@ export async function deleteSession(id: any) {
  * @returns {Promise<SessionMeta | undefined>}
  */
 export async function getSession(id: any) {
-  await delay()
   try {
     const res = await fetch(`${API_URL}/session/${id}`, { cache: "no-store" })
     if (res.ok) {

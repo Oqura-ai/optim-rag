@@ -50,7 +50,7 @@ export function CommitChangesDialog({ chunks, onCommitSuccess, sessionId, upload
 
       toast({
         title: "Changes Committed Successfully",
-        description: `${totalChanges} changes have been saved to the backend.`,
+        description: `${totalChanges} changes have been saved to the `,
       })
 
       setOpen(false)
@@ -59,7 +59,7 @@ export function CommitChangesDialog({ chunks, onCommitSuccess, sessionId, upload
       console.error("Failed to commit changes:", error)
       toast({
         title: "Commit Failed",
-        description: error instanceof Error ? error.message : "Failed to commit changes to backend.",
+        description: error instanceof Error ? error.message : "Failed to commit changes to ",
         variant: "destructive",
       })
     } finally {

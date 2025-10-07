@@ -17,6 +17,8 @@ import {
   Upload,
   Trash2,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
+
 import {
   Collapsible,
   CollapsibleContent,
@@ -59,6 +61,7 @@ export function ChunkList({
   const [showSettings, setShowSettings] = useState(false);
   const [showAddDialog, setShowAddDialog] = useState(false); // Added state for add dialog
   const [showUploadDialog, setShowUploadDialog] = useState(false); // Added upload dialog state
+  const router = useRouter();
 
   // Group chunks by filename
   const groupedChunks = chunks.reduce((acc, chunk) => {
@@ -102,6 +105,26 @@ export function ChunkList({
 
   return (
     <div className="h-full w-96 flex flex-col bg-slate-50 border-r border-slate-200">
+      {/* Add a small toolbar with Open Chat button */}
+      <div className="p-2 flex items-center justify-between border-b">
+        <div className="text-xs text-muted-foreground truncate">
+          {/* Show current session id */}
+          Session: <span className="font-medium">{sessionId || "—"}</span>
+        </div>
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={() => {
+            if (!sessionId) return;
+            router.push(`/chat?sessionId=${encodeURIComponent(sessionId)}`);
+          }}
+          disabled={!sessionId}
+          title="Open chat for this session"
+          aria-label="Open chat"
+        >
+          Chat
+        </Button>
+      </div>
       <div className="p-4 border-b border-slate-200">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold text-slate-900">

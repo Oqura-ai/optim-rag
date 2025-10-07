@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { Chunk, UploadedFile } from "@/types/chunk"
+import type { Chunk, UploadedFile } from "@/types/chunk";
 import { createNewChunk } from "@/lib/chunk-utils";
 import { ChunkList } from "@/components/chunk-list";
 import { MarkdownEditor } from "@/components/markdown-editor";
@@ -18,7 +18,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Loader2, Trash2 } from "lucide-react";
-import { listSessions, createSession as feCreateSession } from "@/lib/api-session";
+import {
+  listSessions,
+  createSession as feCreateSession,
+} from "@/lib/api-session";
 import { deleteSession as feDeleteSession } from "@/lib/api";
 
 export default function ChunkEditor() {
@@ -29,21 +32,27 @@ export default function ChunkEditor() {
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]) // Added uploaded files state
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]); // Added uploaded files state
 
-  type SessionMeta = { id: string; createdAt: string; name?: string; archiveName?: string; archiveSize?: number }
-  const [sessions, setSessions] = useState<SessionMeta[]>([])
-  const [newSessionZip, setNewSessionZip] = useState<File | null>(null)
-  const [newSessionName, setNewSessionName] = useState<string>("")
-  const [isSessionOp, setIsSessionOp] = useState<boolean>(false)
+  type SessionMeta = {
+    id: string;
+    createdAt: string;
+    name?: string;
+    archiveName?: string;
+    archiveSize?: number;
+  };
+  const [sessions, setSessions] = useState<SessionMeta[]>([]);
+  const [newSessionZip, setNewSessionZip] = useState<File | null>(null);
+  const [newSessionName, setNewSessionName] = useState<string>("");
+  const [isSessionOp, setIsSessionOp] = useState<boolean>(false);
 
   useEffect(() => {
     // Load sessions from front-end store on first render of popup
-    ;(async () => {
-      const all = await listSessions()
-      setSessions(all)
-    })()
-  }, [])
+    (async () => {
+      const all = await listSessions();
+      setSessions(all);
+    })();
+  }, []);
 
   const selectedChunk =
     chunks.find((chunk) => chunk.chunk_id === selectedChunkId) || null;
@@ -122,29 +131,39 @@ export default function ChunkEditor() {
   };
 
   const handleFileUpload = (file: UploadedFile) => {
-    setUploadedFiles((prevFiles) => [...prevFiles, file])
-  }
+    setUploadedFiles((prevFiles) => [...prevFiles, file]);
+  };
 
   const handleFileDelete = (fileId: string) => {
-    setUploadedFiles((prevFiles) => prevFiles.filter((file) => file.id !== fileId))
-  }
+    setUploadedFiles((prevFiles) =>
+      prevFiles.filter((file) => file.id !== fileId)
+    );
+  };
 
   const handleDeleteFile = (filename: string) => {
     setChunks((prevChunks) =>
-      prevChunks.map((chunk) => (chunk.filename === filename ? { ...chunk, status: "deleted" as const } : chunk)),
-    )
+      prevChunks.map((chunk) =>
+        chunk.filename === filename
+          ? { ...chunk, status: "deleted" as const }
+          : chunk
+      )
+    );
 
     // If the selected chunk belongs to the deleted file, select another chunk
-    const selectedChunk = chunks.find((chunk) => chunk.chunk_id === selectedChunkId)
+    const selectedChunk = chunks.find(
+      (chunk) => chunk.chunk_id === selectedChunkId
+    );
     if (selectedChunk && selectedChunk.filename === filename) {
-      const remainingChunks = chunks.filter((chunk) => chunk.filename !== filename && chunk.status !== "deleted")
+      const remainingChunks = chunks.filter(
+        (chunk) => chunk.filename !== filename && chunk.status !== "deleted"
+      );
       if (remainingChunks.length > 0) {
-        setSelectedChunkId(remainingChunks[0].chunk_id)
+        setSelectedChunkId(remainingChunks[0].chunk_id);
       } else {
-        setSelectedChunkId(null)
+        setSelectedChunkId(null);
       }
     }
-  }
+  };
 
   const handleCommitSuccess = () => {
     setChunks((prevChunks) =>
@@ -164,8 +183,8 @@ export default function ChunkEditor() {
       prevFiles.map((file) => ({
         ...file,
         status: "committed" as const,
-      })),
-    )
+      }))
+    );
   };
 
   if (!isInitialized) {
@@ -175,7 +194,8 @@ export default function ChunkEditor() {
           <CardHeader>
             <CardTitle>Session Manager</CardTitle>
             <CardDescription>
-              Create, list, or delete sessions on the front-end. You can still load any session by ID.
+              Create, list, or delete sessions on the front-end. You can still
+              load any session by ID.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -184,15 +204,23 @@ export default function ChunkEditor() {
               <h3 className="text-sm font-medium mb-2">Existing Sessions</h3>
               <div className="rounded border p-3 max-h-56 overflow-auto">
                 {sessions.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No sessions yet. Create one below.</p>
+                  <p className="text-sm text-muted-foreground">
+                    No sessions yet. Create one below.
+                  </p>
                 ) : (
                   <ul className="space-y-2">
                     {sessions.map((s) => (
-                      <li key={s.id} className="flex items-center justify-between gap-2">
+                      <li
+                        key={s.id}
+                        className="flex items-center justify-between gap-2"
+                      >
                         <div className="min-w-0">
-                          <div className="text-sm font-medium text-pretty">{s.name || s.id}</div>
+                          <div className="text-sm font-medium text-pretty">
+                            {s.name || s.id}
+                          </div>
                           <div className="text-xs text-muted-foreground truncate">
-                            ID: {s.id} • {new Date(s.createdAt).toLocaleString()}
+                            ID: {s.id} •{" "}
+                            {new Date(s.createdAt).toLocaleString()}
                             {s.archiveName ? ` • ZIP: ${s.archiveName}` : ""}
                           </div>
                         </div>
@@ -210,13 +238,13 @@ export default function ChunkEditor() {
                             size="icon"
                             onClick={async () => {
                               try {
-                                setIsSessionOp(true)
-                                await feDeleteSession(s.id)
-                                const all = await listSessions()
-                                setSessions(all)
-                                if (sessionId === s.id) setSessionId("")
+                                setIsSessionOp(true);
+                                await feDeleteSession(s.id);
+                                const all = await listSessions();
+                                setSessions(all);
+                                if (sessionId === s.id) setSessionId("");
                               } finally {
-                                setIsSessionOp(false)
+                                setIsSessionOp(false);
                               }
                             }}
                             disabled={isSessionOp}
@@ -238,7 +266,9 @@ export default function ChunkEditor() {
               <h3 className="text-sm font-medium">Create New Session</h3>
               <div className="grid gap-3 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="newSessionName">Session Name (optional)</Label>
+                  <Label htmlFor="newSessionName">
+                    Session Name (optional)
+                  </Label>
                   <Input
                     id="newSessionName"
                     value={newSessionName}
@@ -253,7 +283,9 @@ export default function ChunkEditor() {
                     id="zipUpload"
                     type="file"
                     accept=".zip"
-                    onChange={(e) => setNewSessionZip(e.target.files?.[0] || null)}
+                    onChange={(e) =>
+                      setNewSessionZip(e.target.files?.[0] || null)
+                    }
                     disabled={isSessionOp}
                   />
                 </div>
@@ -262,27 +294,35 @@ export default function ChunkEditor() {
                 <Button
                   onClick={async () => {
                     if (!newSessionZip) {
-                      setError("Please select a ZIP file to create a session")
-                      return
+                      setError("Please select a ZIP file to create a session");
+                      return;
                     }
                     try {
-                      setError(null)
-                      setIsSessionOp(true)
-                      const created = await feCreateSession(newSessionZip, newSessionName)
-                      const all = await listSessions()
-                      setSessions(all)
-                      setSessionId(created.id) // Prefill to allow quick load
+                      setError(null);
+                      setIsSessionOp(true);
+                      const created = await feCreateSession(
+                        newSessionZip,
+                        newSessionName
+                      );
+                      const all = await listSessions();
+                      setSessions(all);
+                      setSessionId(created.id); // Prefill to allow quick load
                     } catch (e) {
-                      setError(e instanceof Error ? e.message : "Failed to create session")
+                      setError(
+                        e instanceof Error
+                          ? e.message
+                          : "Failed to create session"
+                      );
                     } finally {
-                      setIsSessionOp(false)
+                      setIsSessionOp(false);
                     }
                   }}
                   disabled={isSessionOp || !newSessionZip}
                 >
                   {isSessionOp ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Creating...
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />{" "}
+                      Creating...
                     </>
                   ) : (
                     "Create Session"
@@ -303,9 +343,17 @@ export default function ChunkEditor() {
               />
             </section>
 
-            {error && <div className="text-sm text-red-600 bg-red-50 p-2 rounded">{error}</div>}
+            {error && (
+              <div className="text-sm text-red-600 bg-red-50 p-2 rounded">
+                {error}
+              </div>
+            )}
 
-            <Button onClick={handleLoadChunks} disabled={isLoading || !sessionId.trim()} className="w-full">
+            <Button
+              onClick={handleLoadChunks}
+              disabled={isLoading || !sessionId.trim()}
+              className="w-full"
+            >
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -318,7 +366,7 @@ export default function ChunkEditor() {
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
   return (
@@ -352,5 +400,5 @@ export default function ChunkEditor() {
 
       <Toaster />
     </div>
-  )
+  );
 }
