@@ -11,7 +11,7 @@ from mistralai import Mistral
 import pdfplumber
 import asyncio
 
-from qdrant_setup import *
+from utils.qdrant_setup import *
 
 
 client = Mistral(api_key=os.getenv("MISTRAL_API_KEY"))

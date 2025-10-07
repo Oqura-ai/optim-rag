@@ -1,10 +1,11 @@
 import os
+import uuid
 import random
+from datetime import datetime
 from dotenv import load_dotenv
+
 from qdrant_client import QdrantClient, models
 from fastembed import TextEmbedding, LateInteractionTextEmbedding, SparseTextEmbedding 
-import uuid
-from datetime import datetime
 
 load_dotenv()
 
@@ -86,7 +87,7 @@ def retrieve_from_store(question: str, session_id:str, n_points: int = 10) -> st
             limit=n_points,
     )
 
-    return results.points
+    return [result.payload for result in results.points]
 
 def remove_data_from_store(session_id:str) -> str:
     client.delete(
@@ -104,103 +105,6 @@ def remove_data_from_store(session_id:str) -> str:
             )
         )
     )
-
-# def rag_pipeline_setup(session_id, documents, is_new=False):
-#     points_to_upsert = []
-#     new_point_id = 0
-
-#     deleted_id = []
-
-#     # --- 1. Fetch existing chunks for this session ---
-#     existing_chunks, _ = client.scroll(
-#         collection_name=collection_name,
-#         scroll_filter={"must": [{"key": "group_id", "match": {"value": session_id}}]},
-#         limit=10_000  # adjust as needed
-#     )
-
-#     # Map by chunk_hash for fast lookup
-#     existing_map = {chunk.payload.get("chunk_hash"): chunk for chunk in existing_chunks}
-
-#     # Keep track of all current hashes
-#     incoming_hashes = set()
-
-#     # --- 2. Iterate over incoming documents ---
-#     for doc_idx, chunk in enumerate(documents):
-#         seen_in_doc = set()  # detect duplicates inside one doc
-#         text = chunk["page_content"]
-#         chunk_hash = chunk["chunk_hash"]
-#         previous_hash = chunk.get("previous_hash")
-#         status = chunk.get("status")
-#         chunk_id = chunk.get("id")
-
-#         # --- Duplicate detection (in same input batch) ---
-#         if chunk_hash in seen_in_doc:
-#             print(f"[DUPLICATE] Skipping duplicate chunk {chunk_hash}")
-#             continue
-#         seen_in_doc.add(chunk_hash)
-#         incoming_hashes.add(chunk_hash)
-
-#         # --- Case 1: Unchanged chunk (already exists, same hash) ---
-#         if chunk_hash in existing_map:
-#             # Drift detection: metadata changed?
-#             existing_payload = existing_map[chunk_hash].payload
-#             metadata_changed = any(
-#                 existing_payload.get(k) != v
-#                 for k, v in chunk.items()
-#                 if k != "page_content"  # ignore content
-#             )
-#             if metadata_changed:
-#                 print(f"[DRIFT] Metadata drift detected for {chunk_hash}, updating payload")
-#                 point_id = existing_map[chunk_hash].id
-#             else:
-#                 continue  # completely unchanged → skip
-
-#         # --- Case 2: Updated chunk (previous_hash found) ---
-#         elif previous_hash and previous_hash in existing_map:
-#             old_point = existing_map[previous_hash]
-#             point_id = old_point.id  # reuse same ID → replacement
-#             print(f"[UPDATE] Replacing chunk {previous_hash} → {chunk_hash}")
-
-#         # --- Case 3: Deleted Chunk
-#         elif status == "deleted":
-#             deleted_ids.append(chunk_id)
-
-#         # --- Case 4: New chunk ---
-#         else:
-#             point_id = new_point_id
-#             new_point_id += 1
-#             print(f"[NEW] Inserting new chunk {chunk_hash}")
-
-#         # Build the new point
-#         point = models.PointStruct(
-#             id=point_id,
-#             vector={
-#                 "all-MiniLM-L6-v2": models.Document(text=text, model=dense_model_name),
-#                 "bm25": models.Document(text=text, model=bm25_model_name),
-#                 "colbertv2.0": models.Document(text=text, model=late_interaction_model_name),
-#             },
-#             payload={"group_id": session_id, **chunk},
-#         )
-#         points_to_upsert.append(point)
-
-#     # --- 3. Detect deleted chunks ---
-#     if deleted_ids and not is_new:
-#         print(f"[DELETE] Removing {len(deleted_ids)} chunks from DB")
-#         client.delete(
-#             collection_name=collection_name,
-#             points_selector=models.PointIdsList(points=deleted_ids),
-#         )
-
-#     # --- 4. Perform upsert for new/updated points ---
-#     if points_to_upsert:
-#         print(f"[UPSERT] Writing {len(points_to_upsert)} chunks to DB")
-#         client.upsert(
-#             collection_name=collection_name,
-#             points=points_to_upsert,
-#         )
-#     else:
-#         print("[UPSERT] Nothing new to write")
-
 
 def rag_pipeline_setup(session_id, documents, is_new=False):
     points_to_upsert = []
@@ -324,3 +228,100 @@ def rag_pipeline_setup(session_id, documents, is_new=False):
         )
     else:
         print("[UPSERT] Nothing new to write")
+
+
+# def rag_pipeline_setup(session_id, documents, is_new=False):
+#     points_to_upsert = []
+#     new_point_id = 0
+
+#     deleted_id = []
+
+#     # --- 1. Fetch existing chunks for this session ---
+#     existing_chunks, _ = client.scroll(
+#         collection_name=collection_name,
+#         scroll_filter={"must": [{"key": "group_id", "match": {"value": session_id}}]},
+#         limit=10_000  # adjust as needed
+#     )
+
+#     # Map by chunk_hash for fast lookup
+#     existing_map = {chunk.payload.get("chunk_hash"): chunk for chunk in existing_chunks}
+
+#     # Keep track of all current hashes
+#     incoming_hashes = set()
+
+#     # --- 2. Iterate over incoming documents ---
+#     for doc_idx, chunk in enumerate(documents):
+#         seen_in_doc = set()  # detect duplicates inside one doc
+#         text = chunk["page_content"]
+#         chunk_hash = chunk["chunk_hash"]
+#         previous_hash = chunk.get("previous_hash")
+#         status = chunk.get("status")
+#         chunk_id = chunk.get("id")
+
+#         # --- Duplicate detection (in same input batch) ---
+#         if chunk_hash in seen_in_doc:
+#             print(f"[DUPLICATE] Skipping duplicate chunk {chunk_hash}")
+#             continue
+#         seen_in_doc.add(chunk_hash)
+#         incoming_hashes.add(chunk_hash)
+
+#         # --- Case 1: Unchanged chunk (already exists, same hash) ---
+#         if chunk_hash in existing_map:
+#             # Drift detection: metadata changed?
+#             existing_payload = existing_map[chunk_hash].payload
+#             metadata_changed = any(
+#                 existing_payload.get(k) != v
+#                 for k, v in chunk.items()
+#                 if k != "page_content"  # ignore content
+#             )
+#             if metadata_changed:
+#                 print(f"[DRIFT] Metadata drift detected for {chunk_hash}, updating payload")
+#                 point_id = existing_map[chunk_hash].id
+#             else:
+#                 continue  # completely unchanged → skip
+
+#         # --- Case 2: Updated chunk (previous_hash found) ---
+#         elif previous_hash and previous_hash in existing_map:
+#             old_point = existing_map[previous_hash]
+#             point_id = old_point.id  # reuse same ID → replacement
+#             print(f"[UPDATE] Replacing chunk {previous_hash} → {chunk_hash}")
+
+#         # --- Case 3: Deleted Chunk
+#         elif status == "deleted":
+#             deleted_ids.append(chunk_id)
+
+#         # --- Case 4: New chunk ---
+#         else:
+#             point_id = new_point_id
+#             new_point_id += 1
+#             print(f"[NEW] Inserting new chunk {chunk_hash}")
+
+#         # Build the new point
+#         point = models.PointStruct(
+#             id=point_id,
+#             vector={
+#                 "all-MiniLM-L6-v2": models.Document(text=text, model=dense_model_name),
+#                 "bm25": models.Document(text=text, model=bm25_model_name),
+#                 "colbertv2.0": models.Document(text=text, model=late_interaction_model_name),
+#             },
+#             payload={"group_id": session_id, **chunk},
+#         )
+#         points_to_upsert.append(point)
+
+#     # --- 3. Detect deleted chunks ---
+#     if deleted_ids and not is_new:
+#         print(f"[DELETE] Removing {len(deleted_ids)} chunks from DB")
+#         client.delete(
+#             collection_name=collection_name,
+#             points_selector=models.PointIdsList(points=deleted_ids),
+#         )
+
+#     # --- 4. Perform upsert for new/updated points ---
+#     if points_to_upsert:
+#         print(f"[UPSERT] Writing {len(points_to_upsert)} chunks to DB")
+#         client.upsert(
+#             collection_name=collection_name,
+#             points=points_to_upsert,
+#         )
+#     else:
+#         print("[UPSERT] Nothing new to write")

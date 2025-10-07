@@ -2,8 +2,9 @@ import os
 import hashlib
 from pathlib import Path
 from docx2pdf import convert
-from pdf_ocr import extract_text_from_pdf
 from typing import Union, List, Dict
+
+from utils.pdf_ocr import extract_text_from_pdf
 
 # ---------------------- HASH GENERATION ----------------------
 def generate_chunk_hash(filename, filetype, chunk_id, content):

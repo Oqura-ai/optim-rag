@@ -2,10 +2,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
-from qdrant_setup import rag_pipeline_setup
-from chunking import process_chunks, categorize_files
-
-from editor_router import router, session_exists
+from routers.editor_router import router as editor_router
+from routers.session_router import router as session_router 
+from routers.chat_router import router as chat_router
 
 app = FastAPI(title="Optim-RAG Backend")
 
@@ -18,18 +17,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(router, prefix="/api", tags=["Chunks"])
-
-# Startup Event
-@app.on_event("startup")
-def load_default_data():
-    if not session_exists("1"):
-        folder = "../data-source"
-        print(f"[BOOTSTRAP] Processing folder: {folder}")
-        categorized = categorize_files(folder)
-        output = process_chunks(categorized, chunk_size=None, delimeter=None, buffer=8)
-        rag_pipeline_setup("1", output, True)  # session_id = "1"
-        print("[BOOTSTRAP] Default dataset loaded into Qdrant")
+app.include_router(session_router, prefix="/api", tags=["Sessions"])
+app.include_router(editor_router, prefix="/api", tags=["Editing"])
+app.include_router(chat_router, prefix="/api", tags=["Chat"])
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
