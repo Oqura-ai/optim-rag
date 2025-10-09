@@ -189,22 +189,25 @@ export default function ChunkEditor() {
 
   if (!isInitialized) {
     return (
-      <div className="h-screen flex items-center justify-center bg-background">
-        <Card className="w-full max-w-2xl">
+      <div className="h-screen flex items-center justify-center bg-slate-50">
+        <Card className="w-full max-w-2xl bg-white rounded-2xl shadow-lg border-0">
           <CardHeader>
-            <CardTitle>Session Manager</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-slate-900">Session Manager</CardTitle>
+            <CardDescription className="text-slate-500">
               Create, list, or delete sessions on the front-end. You can still
               load any session by ID.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
+
+          <CardContent className="space-y-8">
             {/* Existing Sessions */}
             <section>
-              <h3 className="text-sm font-medium mb-2">Existing Sessions</h3>
-              <div className="rounded border p-3 max-h-56 overflow-auto">
+              <h3 className="text-sm font-medium text-slate-700 mb-2">
+                Existing Sessions
+              </h3>
+              <div className="rounded-2xl bg-slate-100 p-3 max-h-56 overflow-auto">
                 {sessions.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-slate-500">
                     No sessions yet. Create one below.
                   </p>
                 ) : (
@@ -212,13 +215,13 @@ export default function ChunkEditor() {
                     {sessions.map((s) => (
                       <li
                         key={s.id}
-                        className="flex items-center justify-between gap-2"
+                        className="flex items-center justify-between gap-2 rounded-2xl px-3 py-2"
                       >
                         <div className="min-w-0">
-                          <div className="text-sm font-medium text-pretty">
+                          <div className="text-sm font-medium text-slate-800 truncate">
                             {s.name || s.id}
                           </div>
-                          <div className="text-xs text-muted-foreground truncate">
+                          <div className="text-xs text-slate-500 truncate">
                             ID: {s.id} •{" "}
                             {new Date(s.createdAt).toLocaleString()}
                             {s.archiveName ? ` • ZIP: ${s.archiveName}` : ""}
@@ -226,15 +229,14 @@ export default function ChunkEditor() {
                         </div>
                         <div className="flex items-center gap-2">
                           <Button
-                            variant="secondary"
                             size="sm"
                             onClick={() => setSessionId(s.id)}
                             title="Use this session ID"
+                            className="rounded-2xl bg-slate-300 hover:bg-slate-400 border-0"
                           >
                             Use
                           </Button>
                           <Button
-                            variant="destructive"
                             size="icon"
                             onClick={async () => {
                               try {
@@ -250,6 +252,7 @@ export default function ChunkEditor() {
                             disabled={isSessionOp}
                             aria-label={`Delete session ${s.name || s.id}`}
                             title="Delete session"
+                            className="rounded-full bg-red-600 hover:bg-red-700 text-white border-0"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -262,11 +265,13 @@ export default function ChunkEditor() {
             </section>
 
             {/* Create New Session */}
-            <section className="space-y-3">
-              <h3 className="text-sm font-medium">Create New Session</h3>
-              <div className="grid gap-3 md:grid-cols-2">
+            <section className="space-y-4">
+              <h3 className="text-sm font-medium text-slate-700">
+                Create New Session
+              </h3>
+              <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="newSessionName">
+                  <Label htmlFor="newSessionName" className="text-slate-700">
                     Session Name (optional)
                   </Label>
                   <Input
@@ -275,10 +280,13 @@ export default function ChunkEditor() {
                     onChange={(e) => setNewSessionName(e.target.value)}
                     placeholder="e.g., Q3 Reports"
                     disabled={isSessionOp}
+                    className="rounded-2xl bg-slate-100 text-slate-800 border-0 focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="zipUpload">Upload ZIP</Label>
+                  <Label htmlFor="zipUpload" className="text-slate-700">
+                    Upload ZIP
+                  </Label>
                   <Input
                     id="zipUpload"
                     type="file"
@@ -287,6 +295,7 @@ export default function ChunkEditor() {
                       setNewSessionZip(e.target.files?.[0] || null)
                     }
                     disabled={isSessionOp}
+                    className="rounded-2xl bg-slate-100 text-slate-800 border-0 cursor-pointer focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               </div>
@@ -306,7 +315,7 @@ export default function ChunkEditor() {
                       );
                       const all = await listSessions();
                       setSessions(all);
-                      setSessionId(created.id); // Prefill to allow quick load
+                      setSessionId(created.id);
                     } catch (e) {
                       setError(
                         e instanceof Error
@@ -318,6 +327,7 @@ export default function ChunkEditor() {
                     }
                   }}
                   disabled={isSessionOp || !newSessionZip}
+                  className="rounded-2xl bg-blue-500 hover:bg-blue-600 text-white border-0"
                 >
                   {isSessionOp ? (
                     <>
@@ -331,20 +341,23 @@ export default function ChunkEditor() {
               </div>
             </section>
 
-            {/* Manual Session ID + Load */}
+            {/* Manual Session ID */}
             <section className="space-y-2">
-              <Label htmlFor="sessionId">Manual Session ID</Label>
+              <Label htmlFor="sessionId" className="text-slate-700">
+                Manual Session ID
+              </Label>
               <Input
                 id="sessionId"
                 value={sessionId}
                 onChange={(e) => setSessionId(e.target.value)}
                 placeholder="Enter session ID..."
                 disabled={isLoading || isSessionOp}
+                className="rounded-2xl bg-slate-100 text-slate-800 border-0 focus:ring-2 focus:ring-blue-500"
               />
             </section>
 
             {error && (
-              <div className="text-sm text-red-600 bg-red-50 p-2 rounded">
+              <div className="text-sm text-red-600 bg-red-50 p-3 rounded-2xl">
                 {error}
               </div>
             )}
@@ -352,7 +365,7 @@ export default function ChunkEditor() {
             <Button
               onClick={handleLoadChunks}
               disabled={isLoading || !sessionId.trim()}
-              className="w-full"
+              className="w-full rounded-2xl bg-blue-600 hover:bg-blue-700 text-white border-0"
             >
               {isLoading ? (
                 <>

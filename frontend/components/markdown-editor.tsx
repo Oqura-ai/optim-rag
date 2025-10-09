@@ -24,9 +24,6 @@ import {
   Edit3,
 } from "lucide-react"
 import { ChunkStatusIndicator } from "./chunk-status-indicator"
-import ReactMarkdown from "react-markdown"
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
-import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism"
 import MarkdownRenderer from "./markdown-renderer"
 
 interface MarkdownEditorProps {
@@ -112,7 +109,7 @@ export function MarkdownEditor({ chunk, onSave, wordLimit }: MarkdownEditorProps
   return (
     <div className="h-full flex flex-col bg-background">
       {/* Header */}
-      <div className="p-4 border-b border-border bg-card">
+      <div className="p-4 border-b-2 border-slate-200 bg-slate-50">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-3">
             <h2 className="text-lg font-semibold text-card-foreground">
@@ -130,27 +127,26 @@ export function MarkdownEditor({ chunk, onSave, wordLimit }: MarkdownEditorProps
           <div className="flex items-center gap-2">
             <Button
               onClick={() => setIsViewMode(!isViewMode)}
-              variant="outline"
               size="sm"
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 hover:bg-slate-200 rounded-2xl bg-gray-300 border-slate-200"
             >
               {isViewMode ? <Edit3 size={16} /> : <Eye size={16} />}
               {isViewMode ? "Edit" : "Preview"}
             </Button>
-            <Button onClick={handleRevert} variant="outline" size="sm" disabled={!hasUnsavedChanges}>
+            <Button onClick={handleRevert} size="sm" className="text-black hover:bg-yellow-200 rounded-2xl bg-yellow-500" disabled={!hasUnsavedChanges}>
               <RotateCcw size={16} />
               Revert
             </Button>
             <Button
               onClick={handleSave}
               size="sm"
-              disabled={!hasUnsavedChanges}
-              className="bg-primary text-primary-foreground hover:bg-primary/90"
+              disabled={!hasUnsavedChanges || isOverLimit}
+              className="text-white hover:bg-green-600 rounded-2xl bg-green-500"
             >
               <Save size={16} />
               Save
             </Button>
-            <Button onClick={handleDeleteChunk} variant="destructive" size="sm">
+            <Button onClick={handleDeleteChunk} className="text-white hover:bg-red-600 rounded-2xl bg-red-500" size="sm">
               <Trash2 size={16} />
               Delete
             </Button>
@@ -187,14 +183,14 @@ export function MarkdownEditor({ chunk, onSave, wordLimit }: MarkdownEditorProps
               value={content}
               onChange={(e) => handleContentChange(e.target.value)}
               placeholder="Enter your markdown content here..."
-              className={`h-full resize-none font-mono text-sm leading-relaxed ${
+              className={`h-full resize-none font-mono text-sm leading-relaxed border-none rounded-2xl ${
                 isOverLimit ? "border-destructive focus:border-destructive" : ""
               }`}
             />
           )}
         </div>
 
-        <div className="w-80 p-4 border-l border-border bg-slate-50">
+        <div className="w-80 p-4 border-l-2 border-slate-200 bg-slate-50">
           <h3 className="text-lg font-semibold text-slate-900 mb-4">Chunk Metadata</h3>
 
           <div className="space-y-4">
@@ -212,7 +208,7 @@ export function MarkdownEditor({ chunk, onSave, wordLimit }: MarkdownEditorProps
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-600">File Type:</span>
-                    <Badge variant="outline">{chunk.filetype.toUpperCase()}</Badge>
+                    <Badge variant="outline" className="px-2 border-none">{chunk.filetype.toUpperCase()}</Badge>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-600">Page:</span>

@@ -42,7 +42,7 @@ export function ChunkStatusIndicator({ status, size = "md" }: ChunkStatusIndicat
   return (
     <Badge
       variant={config.variant}
-      className={`${config.className} flex items-center gap-1 ${size === "sm" ? "text-xs px-2 py-1" : ""}`}
+      className={`${config.className} rounded-2xl flex items-center gap-1 ${size === "sm" ? "text-xs px-2 py-1" : ""}`}
     >
       {config.icon}
       {config.label}

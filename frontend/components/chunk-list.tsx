@@ -104,16 +104,16 @@ export function ChunkList({
   };
 
   return (
-    <div className="h-full w-96 flex flex-col bg-slate-50 border-r border-slate-200">
+    <div className="h-full w-96 flex flex-col bg-slate-50 border-r-2 border-slate-200">
       {/* Add a small toolbar with Open Chat button */}
-      <div className="p-2 flex items-center justify-between border-b">
+      <div className="p-2 flex items-center justify-between border-b-2 border-slate-200">
         <div className="text-xs text-muted-foreground truncate">
           {/* Show current session id */}
           Session: <span className="font-medium">{sessionId || "—"}</span>
         </div>
         <Button
           size="sm"
-          variant="secondary"
+          className="bg-blue-500 text-white hover:bg-blue-600 rounded-2xl"
           onClick={() => {
             if (!sessionId) return;
             router.push(`/chat?sessionId=${encodeURIComponent(sessionId)}`);
@@ -125,7 +125,7 @@ export function ChunkList({
           Chat
         </Button>
       </div>
-      <div className="p-4 border-b border-slate-200">
+      <div className="p-4 border-b-2 border-slate-200">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold text-slate-900">
             Document Chunks
@@ -141,9 +141,8 @@ export function ChunkList({
             </Button>
             <Button
               onClick={() => setShowUploadDialog(true)}
-              variant="outline"
               size="sm"
-              className="text-slate-700 hover:bg-slate-100"
+              className="hover:bg-slate-100 rounded-2xl bg-gray-200 border-slate-200"
             >
               <Upload size={16} />
               Upload
@@ -151,7 +150,7 @@ export function ChunkList({
             <Button
               onClick={() => setShowAddDialog(true)}
               size="sm"
-              className="bg-primary text-primary-foreground hover:bg-primary/90"
+              className="hover:bg-slate-100 rounded-2xl bg-gray-200 border-slate-200"
             >
               <Plus size={16} />
               Add Chunk
@@ -160,7 +159,7 @@ export function ChunkList({
         </div>
 
         {showSettings && (
-          <div className="mb-3 p-3 bg-slate-100 rounded-md">
+          <div className="mb-3 p-3 bg-slate-100 rounded-2xl">
             <Label
               htmlFor="word-limit"
               className="text-sm font-medium text-slate-900"
@@ -174,7 +173,7 @@ export function ChunkList({
               onChange={(e) =>
                 onWordLimitChange(Number.parseInt(e.target.value) || 0)
               }
-              className="mt-1"
+              className="mt-1 border-none bg-gray-200 rounded-full w-fit"
               min="1"
             />
             <p className="text-xs text-slate-600 mt-1">
@@ -243,7 +242,7 @@ export function ChunkList({
                 open={isOpen}
                 onOpenChange={() => toggleFile(filename)}
               >
-                <CollapsibleTrigger className="flex items-center gap-2 w-full text-left p-2 hover:bg-slate-100 rounded-md text-slate-900">
+                <CollapsibleTrigger className="flex items-center gap-2 w-full text-left p-2 hover:bg-slate-100 rounded-2xl text-slate-900">
                   {isOpen ? (
                     <ChevronDown size={16} />
                   ) : (
@@ -278,9 +277,9 @@ export function ChunkList({
                       return (
                         <Card
                           key={chunk.chunk_id}
-                          className={`p-3 cursor-pointer transition-colors hover:bg-slate-100 ${
+                          className={`p-3 cursor-pointer transition-colors hover:bg-slate-100 rounded-2xl ${
                             selectedChunkId === chunk.chunk_id
-                              ? "bg-slate-200 border-primary"
+                              ? "bg-slate-200 border-slate-300"
                               : "bg-white border-slate-200"
                           } ${isOverLimit ? "border-destructive/50" : ""}`}
                           onClick={() => onSelectChunk(chunk.chunk_id)}
@@ -291,7 +290,7 @@ export function ChunkList({
                             </span>
                             <div className="flex items-center gap-2">
                               <span
-                                className={`text-xs px-2 py-1 rounded ${
+                                className={`text-xs px-2 py-1 rounded-2xl ${
                                   isOverLimit
                                     ? "bg-destructive/20 text-destructive"
                                     : "bg-slate-100 text-slate-600"

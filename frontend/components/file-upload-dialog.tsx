@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import {
@@ -29,17 +28,10 @@ export function FileUploadDialog({ open, onOpenChange, onFileUpload }: FileUploa
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const acceptedTypes = [".txt", ".pdf", ".docx", ".md"]
-  const acceptedMimeTypes = [
-    "text/plain",
-    "application/pdf",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    "text/markdown",
-  ]
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
-      // Validate file type
       const extension = "." + file.name.split(".").pop()?.toLowerCase()
       if (!acceptedTypes.includes(extension)) {
         alert(`File type not supported. Please upload: ${acceptedTypes.join(", ")}`)
@@ -51,18 +43,11 @@ export function FileUploadDialog({ open, onOpenChange, onFileUpload }: FileUploa
 
   const handleUpload = async () => {
     if (!selectedFile) return
-
     setIsUploading(true)
 
     try {
-      // Create FormData for file upload
-      const formData = new FormData()
-      formData.append("file", selectedFile)
-
-      // Simulate file upload to ../data-source/ folder
-      // In a real implementation, this would be an API call
       const extension = selectedFile.name.split(".").pop()?.toLowerCase() || ""
-      const filename = selectedFile.name.replace(/\.[^/.]+$/, "") // Remove extension
+      const filename = selectedFile.name.replace(/\.[^/.]+$/, "")
 
       const uploadedFile: UploadedFile = {
         id: `upload_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -73,20 +58,15 @@ export function FileUploadDialog({ open, onOpenChange, onFileUpload }: FileUploa
         uploadedAt: new Date().toISOString(),
         status: "new",
         path: `../data-source/${selectedFile.name}`,
-        file: selectedFile
+        file: selectedFile,
       }
 
-      // Simulate async upload
       await new Promise((resolve) => setTimeout(resolve, 1000))
 
       onFileUpload(uploadedFile)
       onOpenChange(false)
-
-      // Reset form
       setSelectedFile(null)
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ""
-      }
+      if (fileInputRef.current) fileInputRef.current.value = ""
     } catch (error) {
       console.error("Upload failed:", error)
       alert("Upload failed. Please try again.")
@@ -97,55 +77,66 @@ export function FileUploadDialog({ open, onOpenChange, onFileUpload }: FileUploa
 
   const handleRemoveFile = () => {
     setSelectedFile(null)
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ""
-    }
+    if (fileInputRef.current) fileInputRef.current.value = ""
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-white">
+      <DialogContent className="sm:max-w-md bg-slate-50 rounded-2xl sm:rounded-2xl shadow-lg border-0">
         <DialogHeader>
-          <DialogTitle>Upload File</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-black">Upload File</DialogTitle>
+          <DialogDescription className="text-black">
             Upload a file to the data-source folder. Supported formats: {acceptedTypes.join(", ")}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="file-upload">Select File</Label>
+            <Label htmlFor="file-upload" className="text-black">Select File</Label>
             <Input
               ref={fileInputRef}
               id="file-upload"
               type="file"
               accept={acceptedTypes.join(",")}
               onChange={handleFileSelect}
-              className="cursor-pointer"
+              className="cursor-pointer bg-slate-100 text-black rounded-2xl border-0 focus:ring-2 focus:ring-slate-300"
             />
           </div>
 
           {selectedFile && (
-            <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+            <div className="flex items-center justify-between p-3 bg-slate-100 rounded-2xl shadow-sm">
               <div className="flex items-center space-x-2">
-                <File className="h-4 w-4 text-slate-600" />
+                <File className="h-4 w-4 text-black" />
                 <div>
-                  <p className="text-sm font-medium">{selectedFile.name}</p>
-                  <p className="text-xs text-slate-500">{(selectedFile.size / 1024).toFixed(1)} KB</p>
+                  <p className="text-sm font-medium text-black">{selectedFile.name}</p>
+                  <p className="text-xs text-black">{(selectedFile.size / 1024).toFixed(1)} KB</p>
                 </div>
               </div>
-              <Button variant="ghost" size="sm" onClick={handleRemoveFile} className="h-8 w-8 p-0">
-                <X className="h-4 w-4" />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleRemoveFile}
+                className="h-8 w-8 p-0 rounded-full hover:bg-slate-200"
+              >
+                <X className="h-4 w-4 text-black" />
               </Button>
             </div>
           )}
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <DialogFooter className="pt-4">
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="rounded-2xl bg-slate-200 text-black hover:bg-slate-300 border-0"
+          >
             Cancel
           </Button>
-          <Button onClick={handleUpload} disabled={!selectedFile || isUploading} className="min-w-[100px]">
+          <Button
+            onClick={handleUpload}
+            disabled={!selectedFile || isUploading}
+            className="rounded-2xl bg-blue-600 hover:bg-blue-700 text-white border-0 min-w-[100px]"
+          >
             {isUploading ? (
               <>
                 <Upload className="mr-2 h-4 w-4 animate-pulse" />

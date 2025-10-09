@@ -70,7 +70,7 @@ export function CommitChangesDialog({ chunks, onCommitSuccess, sessionId, upload
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="default" className="bg-blue-600 hover:bg-blue-700 text-white" disabled={totalChanges === 0}>
+        <Button variant="default" className="bg-blue-600 hover:bg-blue-700 text-white rounded-2xl" disabled={totalChanges === 0}>
           <Upload className="w-4 h-4 mr-2" />
           Commit Changes ({totalChanges})
         </Button>

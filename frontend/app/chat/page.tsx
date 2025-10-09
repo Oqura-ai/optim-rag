@@ -2,12 +2,13 @@
 
 import { useMemo, useState } from "react";
 import useSWR from "swr";
+import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
 import { getChatHistory, sendChat, deleteChat, type ChatMessage, type ChatModel } from "@/lib/api"
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import MarkdownRenderer from "@/components/markdown-renderer";
 
@@ -33,6 +34,7 @@ function TypingDots() {
 }
 
 export default function ChatPage() {
+  const router = useRouter();
   const params = useSearchParams();
   const sessionId = params.get("sessionId") || "";
 
@@ -102,30 +104,44 @@ export default function ChatPage() {
   }
 
   return (
-    <main className="mx-auto h-screen max-w-7xl flex flex-col p-4 gap-4 bg-background">
-      <header className="flex items-center justify-center mx-auto">
-        <h1 className="text-lg font-semibold text-pretty mx-2">
-          Chat — Session {sessionId}
+    <main className="mx-auto h-screen max-w-7xl flex flex-col p-6 gap-6 bg-none">
+      {/* Header */}
+      <header className="flex items-center justify-between rounded-2xl bg-white shadow-md px-6 py-4">
+        <h1 className="text-2xl font-bold text-slate-800">
+        Session <span className="text-lg font-mono text-slate-800">{sessionId}</span>
         </h1>
-        <div className="flex gap-2">
-          <Button className="mx-2 rounded-full px-3 py-2 bg-red-500 hover:bg-red-300 font-semibold" size="sm" onClick={handleDelete}>
+        <div className="flex gap-3">
+          {/* Back to Editor Button */}
+          <Button
+            size="sm"
+            onClick={() => router.push("/")}
+            className="rounded-2xl px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-semibold border-0"
+          >
+            <ArrowLeft/> Back to Editor
+          </Button>
+
+          {/* Delete Chat Button */}
+          <Button
+            size="sm"
+            onClick={handleDelete}
+            className="rounded-2xl px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold border-0"
+          >
             Delete Chat
           </Button>
         </div>
       </header>
 
-      <section className="mx-auto flex-1 w-full overflow-auto rounded p-4 space-y-4">
+      {/* Messages Section */}
+      <section className="flex-1 w-full overflow-auto rounded-2xl bg-none shadow-sm p-6 space-y-6">
         {isLoading ? (
-          <div className="text-sm text-muted-foreground flex items-center gap-2">
+          <div className="text-sm text-slate-500 flex items-center gap-2">
             <Loader2 className="h-4 w-4 animate-spin" />
             Loading conversation...
           </div>
         ) : error ? (
-          <div className="text-sm text-red-600">
-            Failed to load chat history
-          </div>
+          <div className="text-sm text-red-600">Failed to load chat history</div>
         ) : messages.length === 0 ? (
-          <div className="text-sm text-muted-foreground text-center">
+          <div className="text-sm text-slate-500 text-center">
             No messages yet. Say hello!
           </div>
         ) : (
@@ -137,12 +153,12 @@ export default function ChatPage() {
               if (isUser) {
                 return (
                   <div key={i} className="flex items-start gap-3 max-w-3xl">
-                    <Avatar className="h-7 w-7">
-                      <AvatarFallback className="text-xs bg-slate-300">
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback className="text-xs bg-blue-600 text-white">
                         U
                       </AvatarFallback>
                     </Avatar>
-                    <div className="px-3 py-2 bg-gray-300 text-foreground rounded-xl font-bold">
+                    <div className="px-4 py-3 bg-slate-300 rounded-2xl text-sm font-medium shadow-sm">
                       <MarkdownRenderer content={m.content} />
                     </div>
                   </div>
@@ -153,23 +169,23 @@ export default function ChatPage() {
                 return (
                   <div
                     key={i}
-                    className="mx-auto w-full p-16 bg-gray-200 rounded-xl font-semibold"
+                    className="mx-auto w-full p-6 bg-slate-100 rounded-2xl shadow-sm text-slate-800 font-medium"
                   >
                     <MarkdownRenderer
                       content={m.content}
-                      className="text-base leading-relaxed text-foreground text-pretty"
+                      className="text-base leading-relaxed text-pretty"
                     />
                   </div>
                 );
               }
 
-              // fallback for other roles (system, etc.)
+              // fallback (system, etc.)
               return (
                 <div key={i} className="mx-auto w-full max-w-3xl">
-                  <div className="text-sm text-muted-foreground">{m.role}</div>
+                  <div className="text-sm text-slate-500 mb-1">{m.role}</div>
                   <MarkdownRenderer
                     content={m.content}
-                    className="text-base leading-relaxed"
+                    className="text-base leading-relaxed text-slate-700"
                   />
                 </div>
               );
@@ -177,7 +193,7 @@ export default function ChatPage() {
 
             {isSending && (
               <div className="mx-auto w-full max-w-3xl">
-                <div className="text-base leading-relaxed text-muted-foreground">
+                <div className="text-base leading-relaxed text-slate-400">
                   <TypingDots />
                 </div>
               </div>
@@ -186,7 +202,8 @@ export default function ChatPage() {
         )}
       </section>
 
-      <section className="flex items-center gap-2 bg-gray-200 rounded-full py-2 px-3">
+      {/* Input Section */}
+      <section className="flex items-center gap-3 bg-slate-200 border-none rounded-2xl shadow-lg px-4 py-2">
         <Input
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -198,22 +215,24 @@ export default function ChatPage() {
               handleSend();
             }
           }}
-          className="border-none font-bold"
+          className="flex-1 rounded-2xl border-0 font-medium text-slate-800"
         />
-        <div className="rounded-full bg-gray-400 text-black px-3 py-2">
+
+        <div className="rounded-2xl bg-slate-100 text-slate-800 px-3 py-2">
           <select
-              value={model}
-              onChange={(e) => setModel(e.target.value as ChatModel)}
-              className="bg-gray-400 text-black font-bold outline-none rounded-xl"
-            >
-              <option value="gpt-5">gpt-5</option>
-              <option value="ollama-local">ollama-server</option>
+            value={model}
+            onChange={(e) => setModel(e.target.value as ChatModel)}
+            className="bg-transparent text-slate-800 font-semibold outline-none rounded-xl"
+          >
+            <option value="gpt-5">gpt-5</option>
+            <option value="ollama-local">ollama-server</option>
           </select>
         </div>
+
         <Button
-          className="rounded-full bg-gray-400 hover:bg-gray-300 text-black"
           onClick={handleSend}
           disabled={isSending || !input.trim()}
+          className="rounded-2xl bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 font-semibold border-0"
         >
           {isSending ? (
             <>
