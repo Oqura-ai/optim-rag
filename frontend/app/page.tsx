@@ -23,6 +23,8 @@ import {
   createSession as feCreateSession,
 } from "@/lib/api-session";
 import { deleteSession as feDeleteSession } from "@/lib/api";
+import Image from "next/image";
+import logo from "@/assets/optim-rag.png"
 
 export default function ChunkEditor() {
   const [chunks, setChunks] = useState<Chunk[]>([]);
@@ -189,196 +191,199 @@ export default function ChunkEditor() {
 
   if (!isInitialized) {
     return (
-      <div className="h-screen flex items-center justify-center bg-slate-50">
-        <Card className="w-full max-w-2xl bg-white rounded-2xl shadow-lg border-0">
-          <CardHeader>
-            <CardTitle className="text-slate-900">Session Manager</CardTitle>
-            <CardDescription className="text-slate-500">
-              Create, list, or delete sessions on the front-end. You can still
-              load any session by ID.
-            </CardDescription>
-          </CardHeader>
+      <div>
+        <div className="h-screen flex flex-col items-center justify-center bg-slate-50">
+        <Image src={logo} className="my-4 mx-auto" alt='optim-rag' />
+          <Card className="w-full max-w-2xl bg-white rounded-2xl shadow-lg border-0">
+            <CardHeader>
+              <CardTitle className="text-slate-900">Session Manager</CardTitle>
+              <CardDescription className="text-slate-500">
+                Create, list, or delete sessions on the front-end. You can still
+                load any session by ID.
+              </CardDescription>
+            </CardHeader>
 
-          <CardContent className="space-y-8">
-            {/* Existing Sessions */}
-            <section>
-              <h3 className="text-sm font-medium text-slate-700 mb-2">
-                Existing Sessions
-              </h3>
-              <div className="rounded-2xl bg-slate-100 p-3 max-h-56 overflow-auto">
-                {sessions.length === 0 ? (
-                  <p className="text-sm text-slate-500">
-                    No sessions yet. Create one below.
-                  </p>
-                ) : (
-                  <ul className="space-y-2">
-                    {sessions.map((s) => (
-                      <li
-                        key={s.id}
-                        className="flex items-center justify-between gap-2 rounded-2xl px-3 py-2"
-                      >
-                        <div className="min-w-0">
-                          <div className="text-sm font-medium text-slate-800 truncate">
-                            {s.name || s.id}
-                          </div>
-                          <div className="text-xs text-slate-500 truncate">
-                            ID: {s.id} •{" "}
-                            {new Date(s.createdAt).toLocaleString()}
-                            {s.archiveName ? ` • ZIP: ${s.archiveName}` : ""}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            size="sm"
-                            onClick={() => setSessionId(s.id)}
-                            title="Use this session ID"
-                            className="rounded-2xl bg-slate-300 hover:bg-slate-400 border-0"
-                          >
-                            Use
-                          </Button>
-                          <Button
-                            size="icon"
-                            onClick={async () => {
-                              try {
-                                setIsSessionOp(true);
-                                await feDeleteSession(s.id);
-                                const all = await listSessions();
-                                setSessions(all);
-                                if (sessionId === s.id) setSessionId("");
-                              } finally {
-                                setIsSessionOp(false);
-                              }
-                            }}
-                            disabled={isSessionOp}
-                            aria-label={`Delete session ${s.name || s.id}`}
-                            title="Delete session"
-                            className="rounded-full bg-red-600 hover:bg-red-700 text-white border-0"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            </section>
-
-            {/* Create New Session */}
-            <section className="space-y-4">
-              <h3 className="text-sm font-medium text-slate-700">
-                Create New Session
-              </h3>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="newSessionName" className="text-slate-700">
-                    Session Name (optional)
-                  </Label>
-                  <Input
-                    id="newSessionName"
-                    value={newSessionName}
-                    onChange={(e) => setNewSessionName(e.target.value)}
-                    placeholder="e.g., Q3 Reports"
-                    disabled={isSessionOp}
-                    className="rounded-2xl bg-slate-100 text-slate-800 border-0 focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="zipUpload" className="text-slate-700">
-                    Upload ZIP
-                  </Label>
-                  <Input
-                    id="zipUpload"
-                    type="file"
-                    accept=".zip"
-                    onChange={(e) =>
-                      setNewSessionZip(e.target.files?.[0] || null)
-                    }
-                    disabled={isSessionOp}
-                    className="rounded-2xl bg-slate-100 text-slate-800 border-0 cursor-pointer focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-              <div className="flex justify-end">
-                <Button
-                  onClick={async () => {
-                    if (!newSessionZip) {
-                      setError("Please select a ZIP file to create a session");
-                      return;
-                    }
-                    try {
-                      setError(null);
-                      setIsSessionOp(true);
-                      const created = await feCreateSession(
-                        newSessionZip,
-                        newSessionName
-                      );
-                      const all = await listSessions();
-                      setSessions(all);
-                      setSessionId(created.id);
-                    } catch (e) {
-                      setError(
-                        e instanceof Error
-                          ? e.message
-                          : "Failed to create session"
-                      );
-                    } finally {
-                      setIsSessionOp(false);
-                    }
-                  }}
-                  disabled={isSessionOp || !newSessionZip}
-                  className="rounded-2xl bg-blue-500 hover:bg-blue-600 text-white border-0"
-                >
-                  {isSessionOp ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />{" "}
-                      Creating...
-                    </>
+            <CardContent className="space-y-8">
+              {/* Existing Sessions */}
+              <section>
+                <h3 className="text-sm font-medium text-slate-700 mb-2">
+                  Existing Sessions
+                </h3>
+                <div className="rounded-2xl bg-slate-100 p-3 max-h-56 overflow-auto">
+                  {sessions.length === 0 ? (
+                    <p className="text-sm text-slate-500">
+                      No sessions yet. Create one below.
+                    </p>
                   ) : (
-                    "Create Session"
+                    <ul className="space-y-2">
+                      {sessions.map((s) => (
+                        <li
+                          key={s.id}
+                          className="flex items-center justify-between gap-2 rounded-2xl px-3 py-2"
+                        >
+                          <div className="min-w-0">
+                            <div className="text-sm font-medium text-slate-800 truncate">
+                              {s.name || s.id}
+                            </div>
+                            <div className="text-xs text-slate-500 truncate">
+                              ID: {s.id} •{" "}
+                              {new Date(s.createdAt).toLocaleString()}
+                              {s.archiveName ? ` • ZIP: ${s.archiveName}` : ""}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              onClick={() => setSessionId(s.id)}
+                              title="Use this session ID"
+                              className="rounded-2xl bg-slate-300 hover:bg-slate-400 border-0"
+                            >
+                              Use
+                            </Button>
+                            <Button
+                              size="icon"
+                              onClick={async () => {
+                                try {
+                                  setIsSessionOp(true);
+                                  await feDeleteSession(s.id);
+                                  const all = await listSessions();
+                                  setSessions(all);
+                                  if (sessionId === s.id) setSessionId("");
+                                } finally {
+                                  setIsSessionOp(false);
+                                }
+                              }}
+                              disabled={isSessionOp}
+                              aria-label={`Delete session ${s.name || s.id}`}
+                              title="Delete session"
+                              className="rounded-full bg-red-600 hover:bg-red-700 text-white border-0"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
                   )}
-                </Button>
-              </div>
-            </section>
+                </div>
+              </section>
 
-            {/* Manual Session ID */}
-            <section className="space-y-2">
-              <Label htmlFor="sessionId" className="text-slate-700">
-                Manual Session ID
-              </Label>
-              <Input
-                id="sessionId"
-                value={sessionId}
-                onChange={(e) => setSessionId(e.target.value)}
-                placeholder="Enter session ID..."
-                disabled={isLoading || isSessionOp}
-                className="rounded-2xl bg-slate-100 text-slate-800 border-0 focus:ring-2 focus:ring-blue-500"
-              />
-            </section>
+              {/* Create New Session */}
+              <section className="space-y-4">
+                <h3 className="text-sm font-medium text-slate-700">
+                  Create New Session
+                </h3>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="newSessionName" className="text-slate-700">
+                      Session Name (optional)
+                    </Label>
+                    <Input
+                      id="newSessionName"
+                      value={newSessionName}
+                      onChange={(e) => setNewSessionName(e.target.value)}
+                      placeholder="e.g., Q3 Reports"
+                      disabled={isSessionOp}
+                      className="rounded-2xl bg-slate-100 text-slate-800 border-0 focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="zipUpload" className="text-slate-700">
+                      Upload ZIP
+                    </Label>
+                    <Input
+                      id="zipUpload"
+                      type="file"
+                      accept=".zip"
+                      onChange={(e) =>
+                        setNewSessionZip(e.target.files?.[0] || null)
+                      }
+                      disabled={isSessionOp}
+                      className="rounded-2xl bg-slate-100 text-slate-800 border-0 cursor-pointer focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end">
+                  <Button
+                    onClick={async () => {
+                      if (!newSessionZip) {
+                        setError("Please select a ZIP file to create a session");
+                        return;
+                      }
+                      try {
+                        setError(null);
+                        setIsSessionOp(true);
+                        const created = await feCreateSession(
+                          newSessionZip,
+                          newSessionName
+                        );
+                        const all = await listSessions();
+                        setSessions(all);
+                        setSessionId(created.id);
+                      } catch (e) {
+                        setError(
+                          e instanceof Error
+                            ? e.message
+                            : "Failed to create session"
+                        );
+                      } finally {
+                        setIsSessionOp(false);
+                      }
+                    }}
+                    disabled={isSessionOp || !newSessionZip}
+                    className="rounded-2xl bg-blue-500 hover:bg-blue-600 text-white border-0"
+                  >
+                    {isSessionOp ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />{" "}
+                        Creating...
+                      </>
+                    ) : (
+                      "Create Session"
+                    )}
+                  </Button>
+                </div>
+              </section>
 
-            {error && (
-              <div className="text-sm text-red-600 bg-red-50 p-3 rounded-2xl">
-                {error}
-              </div>
-            )}
+              {/* Manual Session ID */}
+              <section className="space-y-2">
+                <Label htmlFor="sessionId" className="text-slate-700">
+                  Manual Session ID
+                </Label>
+                <Input
+                  id="sessionId"
+                  value={sessionId}
+                  onChange={(e) => setSessionId(e.target.value)}
+                  placeholder="Enter session ID..."
+                  disabled={isLoading || isSessionOp}
+                  className="rounded-2xl bg-slate-100 text-slate-800 border-0 focus:ring-2 focus:ring-blue-500"
+                />
+              </section>
 
-            <Button
-              onClick={handleLoadChunks}
-              disabled={isLoading || !sessionId.trim()}
-              className="w-full rounded-2xl bg-blue-600 hover:bg-blue-700 text-white border-0"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Loading Chunks...
-                </>
-              ) : (
-                "Load Chunks"
+              {error && (
+                <div className="text-sm text-red-600 bg-red-50 p-3 rounded-2xl">
+                  {error}
+                </div>
               )}
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+
+              <Button
+                onClick={handleLoadChunks}
+                disabled={isLoading || !sessionId.trim()}
+                className="w-full rounded-2xl bg-blue-600 hover:bg-blue-700 text-white border-0"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Loading Chunks...
+                  </>
+                ) : (
+                  "Load Chunks"
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </ div>
     );
   }
 
