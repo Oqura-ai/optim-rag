@@ -6,7 +6,6 @@ import fitz
 import os
 from pptx import Presentation
 from PIL import Image
-from docx import Document
 from mistralai import Mistral
 import pdfplumber
 import asyncio
@@ -31,23 +30,10 @@ def convert_to_pdf(file_bytes: bytes, filename: str):
         return file_bytes
 
     buffer = io.BytesIO()
-    pdf = fitz.open()
 
     if extension in {"jpg", "jpeg", "png", "gif", "webp", "bmp"}:
         img = Image.open(io.BytesIO(file_bytes)).convert("RGB")
         img.save(buffer, format="PDF")
-        return buffer.getvalue()
-
-    elif extension == "pptx":
-        prs = Presentation(io.BytesIO(file_bytes))
-        for slide in prs.slides:
-            text = ""
-            for shape in slide.shapes:
-                if hasattr(shape, "text"):
-                    text += shape.text + "\n"
-            page = pdf.new_page()
-            page.insert_text((72, 72), text)
-        pdf.save(buffer)
         return buffer.getvalue()
 
     else:

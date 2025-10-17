@@ -1,4 +1,6 @@
 import os
+import platform
+import subprocess
 import hashlib
 from pathlib import Path
 from docx2pdf import convert
@@ -28,10 +30,26 @@ def chunk_docx(file_path, chunk_size=None, buffer=8):
     filename = file_path.stem
     filetype = "docx"
     temp_pdf_path = file_path.with_suffix(".pdf")
+    system = platform.system()
 
-    # Convert DOCX → PDF
-    convert(str(file_path), str(temp_pdf_path))
+    if system == 'Windows':
+        # Convert DOCX → PDF
+        convert(str(file_path), str(temp_pdf_path))
+    else:
+        # Ensure LibreOffice is installed in the system
+        temp_dir_path = '../data-source'
+
+        subprocess.run([
+            "libreoffice",
+            "--headless",
+            "--convert-to", "pdf",
+            str(file_path),
+            "--outdir", str(temp_dir_path)
+        ], check=True)
+        temp_pdf_path = Path(f"{temp_dir_path}/{filename}.docx")
+
     print(f"[DOCX CHUNKER] Converted {file_path} → {temp_pdf_path}")
+
 
     with open(temp_pdf_path, "rb") as f:
         file_bytes = f.read()

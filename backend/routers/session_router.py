@@ -3,6 +3,7 @@ import uuid
 import shutil
 import zipfile
 from datetime import datetime
+import datetime as dt
 from dotenv import load_dotenv
 
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
@@ -55,7 +56,7 @@ async def create_session(
 ):
     # Generate session_id (UUID ensures uniqueness, fallback to filename stem if needed)
     session_id = str(uuid.uuid4())
-    createdAt = datetime.now(datetime.timezone.utc)
+    createdAt = datetime.now(dt.timezone.utc)
 
     # Make session-specific temp dir
     session_dir = os.path.join(DATA_FOLDER, session_id)
@@ -90,7 +91,7 @@ async def create_session(
     # Compose session meta
     return SessionMeta(
         id=session_id,
-        createdAt=createdAt,
+        createdAt=str(createdAt),
         name=name or os.path.splitext(archive.filename)[0],
         archiveName=archive.filename,
         archiveSize=archive.size,
