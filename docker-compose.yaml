@@ -1,4 +1,26 @@
 services:
+  backend:
+    build: ./backend
+    container_name: backend
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data-source:/data-source
+    env_file:
+      - .env
+    depends_on:
+      - qdrant
+
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    restart: always
+    ports:
+      - "3000:3000"   # Frontend accessible on localhost:3000
+    depends_on:
+      - backend
+
   qdrant:
     image: qdrant/qdrant:latest
     container_name: qdrant
