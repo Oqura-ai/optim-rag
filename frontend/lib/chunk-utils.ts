@@ -15,13 +15,24 @@ function generateChunkHash(
 export function updateChunkStatus(chunk: Chunk, newContent: string): Chunk {
   const newHash = generateChunkHash(chunk.filename, chunk.filetype, chunk.chunk_id, newContent)
   const isChanged = newHash !== chunk.chunk_hash
+  let final_status: "new" | "unchanged" | "modified" | "deleted";
+
+  if (isChanged && chunk.status != 'new') {
+    final_status = 'modified';
+  }
+  else if (chunk.status != 'new') {
+    final_status = 'unchanged';
+  }
+  else {
+    final_status = 'new';
+  }
 
   return {
     ...chunk,
     page_content: newContent,
     chunk_hash: newHash,
     previous_hash: chunk.chunk_hash,
-    status: isChanged ? "modified" : "unchanged",
+    status: final_status,
     lastEdited: new Date().toISOString(),
   }
 }

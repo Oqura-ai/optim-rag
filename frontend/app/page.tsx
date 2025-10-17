@@ -142,7 +142,7 @@ export default function ChunkEditor() {
     );
   };
 
-  const handleDeleteFile = (filename: string) => {
+  const handleDeleteFileChunks = (filename: string) => {
     setChunks((prevChunks) =>
       prevChunks.map((chunk) =>
         chunk.filename === filename
@@ -167,7 +167,8 @@ export default function ChunkEditor() {
     }
   };
 
-  const handleCommitSuccess = () => {
+  const handleCommitSuccess = async () => {
+    await handleLoadChunks();
     setChunks((prevChunks) =>
       prevChunks
         // 1. Remove deleted ones
@@ -392,7 +393,7 @@ export default function ChunkEditor() {
       {/* Left Panel - Chunk List */}
       <div className="w-fit flex-shrink-0">
         <ChunkList
-          chunks={chunks.filter((chunk) => chunk.status !== "deleted")}
+          chunks={chunks}
           selectedChunkId={selectedChunkId}
           onSelectChunk={handleSelectChunk}
           onAddChunk={handleAddChunk}
@@ -403,7 +404,7 @@ export default function ChunkEditor() {
           uploadedFiles={uploadedFiles}
           onFileUpload={handleFileUpload}
           onFileDelete={handleFileDelete}
-          onDeleteFile={handleDeleteFile} // Added file deletion handler
+          onDeleteFileChunks={handleDeleteFileChunks} // Added file deletion handler for file chunk deletion
         />
       </div>
 

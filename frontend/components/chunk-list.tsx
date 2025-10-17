@@ -40,7 +40,7 @@ interface ChunkListProps {
   uploadedFiles?: UploadedFile[]; // Added uploaded files prop
   onFileUpload?: (file: UploadedFile) => void; // Added file upload handler
   onFileDelete?: (fileId: string) => void; // Added file delete handler
-  onDeleteFile?: (filename: string) => void; // Added file deletion handler
+  onDeleteFileChunks?: (filename: string) => void; // Added file deletion handler
 }
 
 export function ChunkList({
@@ -55,7 +55,7 @@ export function ChunkList({
   uploadedFiles = [], // Added uploaded files with default
   onFileUpload, // Added file upload handler
   onFileDelete, // Added file delete handler
-  onDeleteFile, // Added file deletion handler
+  onDeleteFileChunks, // Added file deletion handler
 }: ChunkListProps) {
   const [openFiles, setOpenFiles] = useState<Record<string, boolean>>({});
   const [showSettings, setShowSettings] = useState(false);
@@ -84,9 +84,9 @@ export function ChunkList({
     }
   };
 
-  const handleDeleteFile = (filename: string) => {
-    if (onDeleteFile) {
-      onDeleteFile(filename);
+  const handleDeleteFileChunks = (filename: string) => {
+    if (onDeleteFileChunks) {
+      onDeleteFileChunks(filename);
     }
   };
 
@@ -256,7 +256,7 @@ export function ChunkList({
                   <Button
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleDeleteFile(filename);
+                      handleDeleteFileChunks(filename);
                     }}
                     variant="ghost"
                     size="sm"
