@@ -18,6 +18,13 @@ class ChunkUpdateRequest(BaseModel):
     session_id: str
     documents: List[Chunk]
 
+class ChunkResponse(BaseModel):
+    session_id: str
+    chunks: List[Chunk]
+
+class StatusResponse(BaseModel):
+    status: str
+    message: str
 
 class SessionMeta(BaseModel):
     id: str
@@ -26,6 +33,9 @@ class SessionMeta(BaseModel):
     archiveName: Optional[str] = None
     archiveSize: Optional[int] = None
 
+class DeleteSessionResponse(BaseModel):
+    status: str
+    message: str
 
 ChatRole = Literal["developer", "user", "assistant"]
 ChatModel = Literal["ollama-local", "gpt-5"]
@@ -38,7 +48,7 @@ class ChatMessage(BaseModel):
 class SendChatRequest(BaseModel):
     session_id: str
     messages: List[ChatMessage]
-    model: Optional[ChatModel] = "ollama-local"
+    model: Optional[ChatModel] = "gpt-5"
 
 class SendChatResponse(BaseModel):
     session_id: str

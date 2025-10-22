@@ -46,7 +46,7 @@ def chunk_docx(file_path, chunk_size=None, buffer=8):
             str(file_path),
             "--outdir", str(temp_dir_path)
         ], check=True)
-        temp_pdf_path = Path(f"{temp_dir_path}/{filename}.docx")
+        temp_pdf_path = Path(f"{temp_dir_path}/{filename}.pdf")
 
     print(f"[DOCX CHUNKER] Converted {file_path} → {temp_pdf_path}")
 

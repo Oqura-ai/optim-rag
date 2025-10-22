@@ -1,0 +1,10 @@
+{
+  "servers": {
+    "optim-rag": {
+      "command": "${workspaceFolder}/backend/.venv/Scripts/python.exe",
+      "args": ["mcp_server.py"],
+      "cwd": "${workspaceFolder}/backend",
+      "envFile": "${workspaceFolder}/.env"
+    }
+  }
+}

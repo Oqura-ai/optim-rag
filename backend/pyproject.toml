@@ -8,6 +8,7 @@ dependencies = [
     "docx2pdf>=0.1.8",
     "fastapi>=0.116.1",
     "fastembed>=0.7.3",
+    "fastmcp>=2.12.5",
     "mistral-ocr>=0.6.0",
     "openai>=2.2.0",
     "pdfplumber>=0.11.7",

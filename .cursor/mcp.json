@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "optim-rag": {
+      "command": "python",
+      "args": ["backend/mcp_server.py"],
+      "cwd": "${workspaceFolder}/backend",
+      "envFile": "${workspaceFolder}/.env",
+      "description": "Optim-RAG vectorstore MCP server"
+    }
+  }
+}

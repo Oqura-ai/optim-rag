@@ -9,8 +9,24 @@ services:
       - ./data-source:/data-source
     env_file:
       - .env
+    environment:
+      RUN_MODE: api
     depends_on:
       - qdrant
+      
+  mcp:
+      build:
+        context: ./backend
+      container_name: mcp_server
+      restart: always
+      ports:
+        - "8080:8080"
+      env_file:
+        - ./backend/.env
+      environment:
+        RUN_MODE: mcp
+      depends_on:
+        - qdrant
 
   frontend:
     build: ./frontend

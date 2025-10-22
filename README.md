@@ -1,4 +1,18 @@
-# `optim-rag`
+<p align="center">
+  <img src="./assets/optim-rag.png" alt="Oqura.ai - optim-rag" width="700"/>
+</p>
+
+<p align="center">
+<a href="https://github.com/Oqura-ai/optim-rag/stargazers"><img src="https://img.shields.io/github/stars/Oqura-ai/optim-rag?style=flat-square" alt="GitHub Stars"></a>
+<a href="https://github.com/Oqura-ai/optim-rag/blob/main/LICENSE"><img src="https://img.shields.io/github/license/Oqura-ai/optim-rag?style=flat-square&color=purple" alt="License"></a>
+<a href="https://github.com/Oqura-ai/optim-rag/commits/main"><img src="https://img.shields.io/github/last-commit/Oqura-ai/optim-rag?style=flat-square&color=blue" alt="Last Commit"></a>
+<img src="https://img.shields.io/badge/Python-3.9%2B-blue?style=flat-square" alt="Python Version">
+<a href="https://github.com/Oqura-ai/optim-rag/graphs/contributors"><img src="https://img.shields.io/github/contributors/Oqura-ai/optim-rag?style=flat-square&color=yellow" alt="Contributors"></a>
+</p>
+
+<!-- <div align="center">
+  <img src="./assets/demo.gif" alt="optim-rag Demo" />
+</div> -->
 
 ## Overview
 
@@ -57,42 +71,195 @@ This is where the stored knowledge is used during conversations or queries.
 
 ---
 
-## Getting Started
+Here’s your refined and **fully-detailed Markdown documentation**, optimized for clarity and professional use.
+It clearly distinguishes between **Docker**, **Vanilla**, and **MCP (Prototype)** setups — explaining the *why* and *when* for each step.
+You can **copy and paste** this directly into your project README or docs.
 
-### Requirements
+---
 
-* **Node.js**
-* **Python 3.13**
-* **Docker** (for Qdrant vector database)
 
-### Setup Steps
+# Getting Started
 
-1. **Start Qdrant**
+optim-rag is a modular Retrieval-Augmented Generation (RAG) framework designed for flexibility and extensibility.  
+You can set it up in multiple ways depending on your purpose — **Docker** for a quick launch or **Vanilla** setup for faster development and debugging.
 
-   ```bash
-   docker-compose up -d qdrant
-   ```
+---
 
-   This launches Qdrant and persists data in `qdrant_data`.
+## Prerequisites
 
-2. **Install Backend Dependencies**
+Before starting, ensure you have the following installed:
 
-   ```bash
-   cd backend
-   uv sync
-   ```
+- **docker** and **docker-compose** – for containerized setup  
+- **node.js (≥22)** – for frontend
+- **python (≥3.13)** – for backend
+- **uv** – for Python dependency management
 
-3. **Install Frontend Dependencies**
+---
 
-   ```bash
-   cd ../frontend
-   npm install
-   ```
+## Step 1: Clone the Repository & Setup Environment
 
-4. **Run the App**
+Clone the project and prepare your environment variables:
 
-   ```bash
-   npm run dev
-   ```
+```bash
+git clone https://github.com/Oqura-ai/optim-rag
+cd optim-rag
+cp .env.example .env # Fill in the required API/auth keys for your services
+cp .env ./backend/.env # Optional: Needed if backend is run standalone (without Docker)
+```
+---
 
-   Open in browser: [http://localhost:3000](http://localhost:3000)
+## Step 2: Docker Setup (Recommended for Quick Start)
+
+Docker setup is the **easiest and fastest** way to run optim-rag — it handles dependencies and services automatically.
+
+```bash
+# if you only want to run the main application
+docker-compose -f docker-compose.yaml up frontend backend qdrant --build
+
+# if you only want to run the mcp server (we will get into this later)
+docker-compose -f docker-compose.yaml up mcp qdrant --build
+
+# if you also want to run the mcp server alongside the main application
+docker-compose -f docker-compose.yaml up --build
+```
+
+* The first build may take time as it downloads all dependencies.
+* Once complete, optim-rag will be available at [http://localhost:3000](http://localhost:3000)
+
+---
+
+## Step 3: Vanilla Setup (For Local Development)
+
+Use the vanilla setup if you want **fine-grained control** over backend/frontend development or debugging.
+
+### 1. Start Qdrant (Vector Database)
+
+```bash
+docker-compose up -d qdrant
+```
+
+* Launches **Qdrant**, the vector store backend used by optim-rag.
+* Data persists in the local `qdrant_data` directory.
+
+---
+
+### 2. Setup Backend
+
+```bash
+cd backend
+uv venv
+
+./.venv/Scripts/activate  # (Windows)
+# or
+source .venv/bin/activate  # (Linux/Mac)
+
+uv pip install -e .
+```
+---
+
+### 3. Setup Frontend
+
+```bash
+cd frontend
+npm install
+```
+---
+
+### 4. Run the Application
+
+```bash
+# Run the frontend (in frontend dir)
+npm run dev
+
+# Run the backend (in backend dir)
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+Open your browser at: [http://localhost:3000](http://localhost:3000)
+
+---
+
+## MCP Server Setup (Prototype Stage)
+
+The **MCP (Model Context Protocol)** server enables **AI-assisted coding clients** (like Cursor, GitHub Copilot, or VSCode) to directly access optim-rag’s vectorstore endpoints as tools.
+
+**Note:** MCP integration is currently **in prototype stage** — features may change in future versions.
+
+---
+
+### For Cursor Editor
+
+Create an MCP configuration file inside your project root:
+
+```bash
+mkdir .cursor
+touch mcp.json
+# or (on Windows)
+New-Item mcp.json
+```
+
+Add this configuration:
+
+```json
+{
+  "mcpServers": {
+    "optim-rag": {
+      "command": "python",
+      "args": ["backend/mcp_server.py"],
+      "cwd": "${workspaceFolder}/backend",
+      "envFile": "${workspaceFolder}/.env",
+      "description": "optim-rag vectorstore MCP server"
+    }
+  }
+}
+```
+---
+
+### For GitHub Copilot / VSCode MCP Integration
+
+Create the config file:
+
+```bash
+mkdir .vscode
+touch mcp.json
+# or (on Windows)
+New-Item mcp.json
+```
+
+Add this configuration:
+
+```json
+{
+  "servers": {
+    "optim-rag": {
+      "command": "${workspaceFolder}/backend/.venv/Scripts/python.exe",
+      "args": ["mcp_server.py"],
+      "cwd": "${workspaceFolder}/backend",
+      "envFile": "${workspaceFolder}/.env"
+    }
+  }
+}
+```
+---
+
+### Run the MCP Server
+
+Once your MCP client (Cursor or VSCode) is configured:
+
+- For vanilla run
+```bash
+cd backend
+python mcp_server.py
+```
+
+- Using docker
+```bash
+docker-compose -f docker-compose.yaml up mcp qdrant --build
+```
+
+
+The MCP server will start and expose optim-rag’s tools to your connected client.
+
+> **Note:**
+> - Make sure if you have the environment activated if running the server in vanilla setup
+> - Since MCP integration is still experimental, expect rapid iteration and breaking changes.
