@@ -10,9 +10,7 @@
 <a href="https://github.com/Oqura-ai/optim-rag/graphs/contributors"><img src="https://img.shields.io/github/contributors/Oqura-ai/optim-rag?style=flat-square&color=yellow" alt="Contributors"></a>
 </p>
 
-<div align="center">
-  <video src="./assets/optim-rag-demo.mp4" controls alt="optim-rag Demo" />
-</div>
+https://github.com/user-attachments/assets/e1690701-1370-4798-b263-e35a58c52bb1
 
 # **Overview**
 
