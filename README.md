@@ -10,11 +10,11 @@
 <a href="https://github.com/Oqura-ai/optim-rag/graphs/contributors"><img src="https://img.shields.io/github/contributors/Oqura-ai/optim-rag?style=flat-square&color=yellow" alt="Contributors"></a>
 </p>
 
-<!-- <div align="center">
-  <img src="./assets/demo.gif" alt="optim-rag Demo" />
-</div> -->
+<div align="center">
+  <video src="./assets/optim-rag-demo.mp4" controls alt="optim-rag Demo" />
+</div>
 
-## Overview
+# **Overview**
 
 `optim-rag` is a tool designed to simplify managing data in Retrieval-Augmented Generation (RAG) systems. It helps you easily add, edit, and manage document chunks used for knowledge retrieval, making it especially useful when working with frequently changing data.
 
@@ -30,48 +30,49 @@
 
 ## What Makes `optim-rag` Different
 
-`optim-rag` focuses on efficient management of embedded vector data. Instead of reprocessing all files, it only updates what has been changed. When users edit or add new contents, the system detects those changes and updates them selectively. This makes it a faster synchronization and smoother performance even with large data.
+optim-rag focuses on efficient management of embedded vector data. Instead of reprocessing all files, it only updates what has been changed. When users edit or add new contents, the system detects those changes and updates them selectively. This makes it a faster synchronization and smoother performance even with large data.
 
 This design is ideal for production setups where data changes frequently and precision in updating is key.
 
 
-## Pipeline
+# **Pipeline**
 
-### **1. Document Ingestion**
+### **1. Resource Upload and Session Setup**
 
-This stage processes raw files and prepares them for storage.
+This stage sets up the workspace and prepares the files for processing.  
 
-* Users upload supported files (`.zip`)
-* OCR extracts text from scanned or image-based documents
-* The system splits the content into smaller chunks and attaches metadata (file name, page, etc.)
-* Chunks are embedded using **dense**, **sparse**, and **late-interaction** models, then stored in **Qdrant** after the user saves them.
+* Users must upload a `.zip` file containing all the required documents such as **PDF, DOCX, TXT, or MD**.  
+* The zip should contain all files directly inside a single folder, without any subfolders or nested structure.  
+* Once uploaded, the system extracts the files and prepares them for chunking.  
+* Users can either **start a new session** or **load an existing one** to continue working with previously uploaded data.  
 
+---
 
-### **2. Chunk Editing and Updates**
+### **2. Chunk Editing and File Management**
 
-This stage allows users to modify the knowledge base directly.
+This stage allows users to organize, modify, and manage their content through the **Chunk Editor** interface.  
 
-* Chunks can be added, edited, or deleted via the frontend
-* When saved, changes are processed by the backend and reflected in the datastore
-* Only the updated or new chunks are indexed, keeping data management efficient
+* Inside the editor, users can upload additional files (TXT, DOCX, MD, or PDF).  
+* They can add new chunks to an existing file or create chunks under a new file category.  
+* Files or individual chunks can be deleted if no longer needed.  
+* Each chunk can be opened for editing, where users can preview its content or view and modify its markdown code.  
+* Every change updates the chunk’s status, newly added chunks are marked as *new*, edited chunks as *modified*, and deleted chunks as *deleted* with a default of *unchanged* status to the chunks which are untouched.  
+* To finalize and execute the modifications, users must **commit** the changes, which applies all pending updates to the datastore.  
 
+---
 
 ### **3. Query and Retrieval**
 
-This is where the stored knowledge is used during conversations or queries.
+This stage lets users interact with the knowledge base through a chat interface.  
 
-* Queries trigger a **hybrid retrieval** process combining dense, sparse, and re-ranking searches
-* The top relevant chunks are compiled into a structured context
-* The **LLM** generates a context-aware, accurate response using this retrieved information
-
-
-Here’s your refined and **fully-detailed Markdown documentation**, optimized for clarity and professional use.
-It clearly distinguishes between **Docker**, **Vanilla**, and **MCP (Prototype)** setups — explaining the *why* and *when* for each step.
-You can **copy and paste** this directly into your project README or docs.
+* After committing changes, users can click on the **Chat** button to test the vectorstore.  
+* The system performs retrieval over the stored chunks and selects the most relevant ones.  
+* These retrieved chunks are compiled into a structured context and passed to the language model.  
+* The **LLM** then generates an accurate and context-aware response based on the uploaded and edited data.
 
 
 
-# Getting Started
+# **Getting Started**
 
 optim-rag is a modular Retrieval-Augmented Generation (RAG) framework designed for flexibility and extensibility.  
 You can set it up in multiple ways depending on your purpose — **Docker** for a quick launch or **Vanilla** setup for faster development and debugging.
@@ -95,7 +96,7 @@ Clone the project and prepare your environment variables:
 git clone https://github.com/Oqura-ai/optim-rag
 cd optim-rag
 cp .env.example .env # Fill in the required API/auth keys for your services
-cp .env ./backend/.env # Optional: Needed if backend is run standalone (without Docker)
+cp .env ./backend/.env
 ```
 
 ## Step 2: Docker Setup (Recommended for Quick Start)
