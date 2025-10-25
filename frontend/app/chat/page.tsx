@@ -225,7 +225,7 @@ export default function ChatPage() {
             className="bg-transparent text-slate-800 font-semibold outline-none rounded-xl"
           >
             <option value="gpt-5">gpt-5</option>
-            <option value="ollama-local">ollama-server</option>
+            {/* <option value="ollama-local">ollama-server</option> */}
           </select>
         </div>
 
