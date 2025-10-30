@@ -37,6 +37,7 @@ interface ChunkListProps {
   onWordLimitChange: (limit: number) => void;
   onCommitSuccess?: () => void;
   sessionId: string; // Added sessionId prop to pass to commit dialog
+  sessionName: string;
   uploadedFiles?: UploadedFile[]; // Added uploaded files prop
   onFileUpload?: (file: UploadedFile) => void; // Added file upload handler
   onFileDelete?: (fileId: string) => void; // Added file delete handler
@@ -52,6 +53,7 @@ export function ChunkList({
   onWordLimitChange,
   onCommitSuccess,
   sessionId,
+  sessionName,
   uploadedFiles = [], // Added uploaded files with default
   onFileUpload, // Added file upload handler
   onFileDelete, // Added file delete handler
@@ -109,14 +111,14 @@ export function ChunkList({
       <div className="p-2 flex items-center justify-between border-b-2 border-slate-200">
         <div className="text-xs text-muted-foreground truncate">
           {/* Show current session id */}
-          Session: <span className="font-medium">{sessionId || "—"}</span>
+          Session: <span className="font-medium">{sessionName || "—"}</span>
         </div>
         <Button
           size="sm"
           className="bg-blue-500 text-white hover:bg-blue-600 rounded-2xl"
           onClick={() => {
             if (!sessionId) return;
-            router.push(`/chat?sessionId=${encodeURIComponent(sessionId)}`);
+            router.push(`/chat?sessionId=${encodeURIComponent(sessionId)}&sessionName=${encodeURIComponent(sessionName)}`);
           }}
           disabled={!sessionId}
           title="Open chat for this session"
@@ -191,6 +193,7 @@ export function ChunkList({
             chunks={chunks}
             onCommitSuccess={onCommitSuccess}
             sessionId={sessionId}
+            sessionName={sessionName}
             uploadedFiles={uploadedFiles}
           />
         </div>

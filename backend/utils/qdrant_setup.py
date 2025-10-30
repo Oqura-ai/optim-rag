@@ -105,7 +105,7 @@ def remove_data_from_store(session_id:str) -> str:
         )
     )
 
-def rag_pipeline_setup(session_id, documents, is_new=False, batch_size=20):
+def rag_pipeline_setup(session_id, session_name, documents, is_new=False, batch_size=20):
     points_to_upsert = []
     deleted_hashes = []
 
@@ -182,7 +182,7 @@ def rag_pipeline_setup(session_id, documents, is_new=False, batch_size=20):
                 "bm25": models.Document(text=text, model=bm25_model_name),
                 "colbertv2.0": models.Document(text=text, model=late_interaction_model_name),
             },
-            payload={"group_id": session_id, **chunk},
+            payload={"group_id": session_id, "session_name": session_name, **chunk},
         )
         points_to_upsert.append(point)
 

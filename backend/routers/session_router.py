@@ -52,7 +52,7 @@ def list_sessions():
             sessions[sid] = SessionMeta(
                 id=sid,
                 createdAt=payload.get("createdAt", datetime.utcnow().isoformat()),
-                name=payload.get("name"),
+                sessionName=payload.get("session_name"),
                 archiveName=payload.get("archiveName"),
                 archiveSize=payload.get("archiveSize"),
             )
@@ -61,7 +61,7 @@ def list_sessions():
 @router.post("/sessions", response_model=SessionMeta)
 async def create_session(
     archive: UploadFile = File(...),
-    name: Optional[str] = Form(None),
+    session_name: str = Form(...),
 ):
     """
     Create and process a new session from an uploaded document archive.
@@ -72,7 +72,7 @@ async def create_session(
 
     Args:
         archive: The uploaded document archive (ZIP or single file).
-        name: Optional human-readable name for the session.
+        session_name: human-readable name for the session.
 
     Returns:
         A `SessionMeta` object describing the created session, including
@@ -110,13 +110,13 @@ async def create_session(
     # Categorize & chunk
     categorized = categorize_files(extracted_files)
     output = process_chunks(categorized, chunk_size=None)
-    rag_pipeline_setup(session_id, output, True)
+    rag_pipeline_setup(session_id, session_name, output, True)
 
     # Compose session meta
     return SessionMeta(
         id=session_id,
         createdAt=str(createdAt),
-        name=name or os.path.splitext(archive.filename)[0],
+        sessionName=session_name,
         archiveName=archive.filename,
         archiveSize=archive.size,
     )

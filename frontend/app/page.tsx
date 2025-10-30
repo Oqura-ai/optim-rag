@@ -24,13 +24,14 @@ import {
 } from "@/lib/api-session";
 import { deleteSession as feDeleteSession } from "@/lib/api";
 import Image from "next/image";
-import logo from "@/assets/optim-rag.png"
+import logo from "@/assets/optim-rag.png";
 
 export default function ChunkEditor() {
   const [chunks, setChunks] = useState<Chunk[]>([]);
   const [selectedChunkId, setSelectedChunkId] = useState<string | null>(null);
   const [wordLimit, setWordLimit] = useState<number>(500);
   const [sessionId, setSessionId] = useState<string>("");
+  const [sessionName, setSessionName] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +40,7 @@ export default function ChunkEditor() {
   type SessionMeta = {
     id: string;
     createdAt: string;
-    name?: string;
+    sessionName: string;
     archiveName?: string;
     archiveSize?: number;
   };
@@ -194,7 +195,7 @@ export default function ChunkEditor() {
     return (
       <div>
         <div className="h-screen flex flex-col items-center justify-center bg-slate-50">
-        <Image src={logo} className="my-4 mx-auto" alt='optim-rag' />
+          <Image src={logo} className="my-4 mx-auto" alt="optim-rag" />
           <Card className="w-full max-w-2xl bg-white rounded-2xl shadow-lg border-0">
             <CardHeader>
               <CardTitle className="text-slate-900">Session Manager</CardTitle>
@@ -224,18 +225,21 @@ export default function ChunkEditor() {
                         >
                           <div className="min-w-0">
                             <div className="text-sm font-medium text-slate-800 truncate">
-                              {s.name || s.id}
+                              {s.sessionName}
                             </div>
                             <div className="text-xs text-slate-500 truncate">
                               ID: {s.id} •{" "}
                               {new Date(s.createdAt).toLocaleString()}
-                              {s.archiveName ? ` • ZIP: ${s.archiveName}` : ""}
+                              {/* {s.archiveName ? ` • ZIP: ${s.archiveName}` : ""} */}
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
                             <Button
                               size="sm"
-                              onClick={() => setSessionId(s.id)}
+                              onClick={() => {
+                                setSessionId(s.id)
+                                setSessionName(s.sessionName)
+                              }}
                               title="Use this session ID"
                               className="rounded-2xl bg-slate-300 hover:bg-slate-400 border-0"
                             >
@@ -255,7 +259,7 @@ export default function ChunkEditor() {
                                 }
                               }}
                               disabled={isSessionOp}
-                              aria-label={`Delete session ${s.name || s.id}`}
+                              aria-label={`Delete session ${s.sessionName}`}
                               title="Delete session"
                               className="rounded-full bg-red-600 hover:bg-red-700 text-white border-0"
                             >
@@ -277,7 +281,7 @@ export default function ChunkEditor() {
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="newSessionName" className="text-slate-700">
-                      Session Name (optional)
+                      Session Name
                     </Label>
                     <Input
                       id="newSessionName"
@@ -307,8 +311,15 @@ export default function ChunkEditor() {
                 <div className="flex justify-end">
                   <Button
                     onClick={async () => {
-                      if (!newSessionZip) {
-                        setError("Please select a ZIP file to create a session");
+                      if (!newSessionZip || !newSessionName) {
+                        setError("Zip file or Session name missing.");
+                        return;
+                      } else if (
+                        sessions.some(
+                          (session) => session.sessionName === newSessionName
+                        )
+                      ) {
+                        setError("A session with this name already exists.");
                         return;
                       }
                       try {
@@ -384,7 +395,7 @@ export default function ChunkEditor() {
             </CardContent>
           </Card>
         </div>
-      </ div>
+      </div>
     );
   }
 
@@ -401,6 +412,7 @@ export default function ChunkEditor() {
           onWordLimitChange={setWordLimit}
           onCommitSuccess={handleCommitSuccess}
           sessionId={sessionId}
+          sessionName={sessionName}
           uploadedFiles={uploadedFiles}
           onFileUpload={handleFileUpload}
           onFileDelete={handleFileDelete}

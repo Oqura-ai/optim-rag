@@ -46,7 +46,7 @@ def get_chunks(session_id: str):
     )
 
     chunks = [point.payload for point in results]
-    return ChunkResponse(session_id=session_id, chunks=chunks)
+    return ChunkResponse(session_id=session_id, session_name=results[0].payload.get("session_name"), chunks=chunks)
 
 
 @router.post("/chunks/update", response_model=StatusResponse)
@@ -62,13 +62,14 @@ def update_chunks(request: ChunkUpdateRequest):
     for an existing session.
     """
     chunks_dict = [chunk.model_dump() for chunk in request.documents]
-    rag_pipeline_setup(request.session_id, chunks_dict)
+    rag_pipeline_setup(request.session_id, request.session_name, chunks_dict)
     return StatusResponse(status="success", message="chunks updated")
 
 
 @router.post("/files/upload", response_model=StatusResponse)
 async def upload_files(
     session_id: str = Form(...),
+    session_name: str = Form(...),
     files: List[UploadFile] = File(...)
 ):
     """
@@ -92,7 +93,7 @@ async def upload_files(
     print(f"[UPLOAD] Processing files for session: {session_id}")
     categorized = categorize_files(saved_files)
     output = process_chunks(categorized, chunk_size=None)
-    rag_pipeline_setup(session_id, output, True)
+    rag_pipeline_setup(session_id, session_name, output, True)
     print(f"[UPLOAD] Session {session_id}: {len(output)} chunks stored")
 
     return StatusResponse(status="success", message="Files added")

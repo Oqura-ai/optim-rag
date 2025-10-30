@@ -64,13 +64,13 @@ export async function listSessions() {
  * @param {string=} name
  * @returns {Promise<SessionMeta>}
  */
-export async function createSession(zipFile: any, name: any) {
+export async function createSession(zipFile: any, session_name: string) {
   // Try backend first if a zip is provided
   if (zipFile instanceof File) {
     try {
       const form = new FormData()
       form.append("archive", zipFile, zipFile.name)
-      if (name && String(name).trim()) form.append("name", String(name).trim())
+      form.append("session_name", String(session_name).trim())
 
       const res = await fetch(`${API_URL}/sessions`, {
         method: "POST",
@@ -84,9 +84,7 @@ export async function createSession(zipFile: any, name: any) {
         const session = {
           id: id || created?.sessionId || created?.uuid || created?.slug || created?.name || crypto.randomUUID(),
           createdAt: created?.createdAt || new Date().toISOString(),
-          name:
-            created?.name ||
-            (name?.trim ? name.trim() : zipFile?.name ? zipFile.name.replace(/\.zip$/i, "") : undefined),
+          sessionName: session_name.trim(),
           archiveName: zipFile?.name || undefined,
           archiveSize: zipFile?.size || undefined,
         }
@@ -106,7 +104,7 @@ export async function createSession(zipFile: any, name: any) {
   const session = {
     id,
     createdAt: new Date().toISOString(),
-    name: name?.trim ? name.trim() : zipFile?.name ? zipFile.name.replace(/\.zip$/i, "") : `Session ${id.slice(-6)}`,
+    sessionName: session_name,
     archiveName: zipFile?.name || undefined,
     archiveSize: zipFile?.size || undefined,
   }

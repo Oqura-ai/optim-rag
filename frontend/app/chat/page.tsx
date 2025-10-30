@@ -37,6 +37,7 @@ export default function ChatPage() {
   const router = useRouter();
   const params = useSearchParams();
   const sessionId = params.get("sessionId") || "";
+  const sessionName = params.get("sessionName") || "";
 
   const { data, error, isLoading, mutate } = useSWR(
     sessionId ? ["chat-history", sessionId] : null,
@@ -108,7 +109,7 @@ export default function ChatPage() {
       {/* Header */}
       <header className="flex items-center justify-between rounded-2xl bg-white shadow-md px-6 py-4">
         <h1 className="text-2xl font-bold text-slate-800">
-        Session <span className="text-lg font-mono text-slate-800">{sessionId}</span>
+        Session <span className="text-lg font-mono text-slate-800">{sessionName}</span>
         </h1>
         <div className="flex gap-3">
           {/* Back to Editor Button */}

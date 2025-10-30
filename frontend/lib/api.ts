@@ -13,11 +13,11 @@ export async function getChunks(sessionId: string) {
 }
 
 // --- 2. Update chunks ---
-export async function updateChunks(sessionId: string, documents: Chunk[]) {
+export async function updateChunks(sessionId: string, sessionName:string, documents: Chunk[]) {
   const res = await fetch(`${API_URL}/chunks/update`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ session_id: sessionId, documents }),
+    body: JSON.stringify({ session_id: sessionId, session_name: sessionName, documents }),
   })
   if (!res.ok) throw new Error("Failed to update chunks")
   return res.json()
@@ -33,9 +33,10 @@ export async function deleteSession(sessionId: string) {
 }
 
 // --- 4. Upload files ---
-export async function uploadFiles(sessionId: string, files: File[]) {
+export async function uploadFiles(sessionId: string, sessionName: string, files: File[]) {
   const formData = new FormData()
   formData.append("session_id", sessionId)
+  formData.append("session_name", sessionName)
 
   files.forEach((file, index) => {
     formData.append(`files`, file)

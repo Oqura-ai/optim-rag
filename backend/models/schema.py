@@ -16,10 +16,12 @@ class Chunk(BaseModel):
 
 class ChunkUpdateRequest(BaseModel):
     session_id: str
+    session_name: str
     documents: List[Chunk]
 
 class ChunkResponse(BaseModel):
     session_id: str
+    session_name: str
     chunks: List[Chunk]
 
 class StatusResponse(BaseModel):
@@ -29,7 +31,7 @@ class StatusResponse(BaseModel):
 class SessionMeta(BaseModel):
     id: str
     createdAt: str
-    name: Optional[str] = None
+    sessionName: str
     archiveName: Optional[str] = None
     archiveSize: Optional[int] = None
 

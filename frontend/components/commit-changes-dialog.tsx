@@ -20,10 +20,11 @@ interface CommitChangesDialogProps {
   chunks: Chunk[]
   onCommitSuccess?: () => void
   sessionId: string
+  sessionName: string
   uploadedFiles?: UploadedFile[] // Added uploaded files prop
 }
 
-export function CommitChangesDialog({ chunks, onCommitSuccess, sessionId, uploadedFiles = []}: CommitChangesDialogProps) {
+export function CommitChangesDialog({ chunks, onCommitSuccess, sessionId, sessionName, uploadedFiles = []}: CommitChangesDialogProps) {
   const [open, setOpen] = useState(false)
   const [isCommitting, setIsCommitting] = useState(false)
   const { toast } = useToast()
@@ -42,11 +43,11 @@ export function CommitChangesDialog({ chunks, onCommitSuccess, sessionId, upload
       if (newFiles.length > 0) {
         const filesToUpload = newFiles.map((f) => f.file).filter(Boolean) as File[]
         if (filesToUpload.length > 0) {
-          await uploadFiles(sessionId, filesToUpload)
+          await uploadFiles(sessionId, sessionName, filesToUpload)
         }
       }
 
-      await updateChunks(sessionId, chunks)
+      await updateChunks(sessionId, sessionName, chunks)
 
       toast({
         title: "Changes Committed Successfully",
@@ -106,6 +107,7 @@ export function CommitChangesDialog({ chunks, onCommitSuccess, sessionId, upload
 
           <div className="bg-blue-50 p-3 rounded-lg">
             <div className="text-sm text-blue-800">
+              <strong>Session Name:</strong> {sessionName}<br/>
               <strong>Session ID:</strong> {sessionId}
             </div>
           </div>
