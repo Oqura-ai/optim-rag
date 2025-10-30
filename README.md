@@ -14,21 +14,20 @@ https://github.com/user-attachments/assets/e1690701-1370-4798-b263-e35a58c52bb1
 
 # **Overview**
 
-`optim-rag` is a tool designed to simplify managing data in Retrieval-Augmented Generation (RAG) systems. It helps you easily add, edit, and manage document chunks used for knowledge retrieval, making it especially useful when working with frequently changing data.
+optim-rag is a tool designed to simplify managing data in Retrieval-Augmented Generation (RAG) systems. It helps you easily add, edit, and manage document chunks used for knowledge retrieval, making it especially useful when working with frequently changing data.
 
 
 ## Key Features
 
 | Core Capability                 | Technical Implementation                                                                                                                                                                                                                     |
 | :------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Efficient Updates**           | Edits, additions, and deletions are saved and processed once the user confirms the changes. Then only these changes get updated for indexing and storage.                                                                           |
-| **Advanced Document Ingestion** | Handles `PDF`, `DOCX`, `MD`, and `TXT` formats. Converts all to a standard format and uses the **Mistral** OCR engine for high-accuracy extraction from text documents.                                    |
-| **Multi-Vector Indexing**       | Every chunk is indexed using **three distinct vector types**: Dense (`cli-MiniLM-L6-v2`), Sparse (`BM25`), and Late-Interaction (`ColBERTv2.0`). This ensures a powerful hybrid search that combines semantic context with keyword accuracy. |
-| **Visual Chunk Editor**         | A dedicated **Next.js** frontend allows users to view, edit, delete, and add new chunks with a live Markdown preview and word count.                                                                                                         |
+| **Efficient Updates** | Edits, additions, and deletions are saved and processed once the user confirms the changes, ensuring only updated chunks are re-indexed and stored through an easy-to-use frontend.                                                                           |
+| **Advanced Document Ingestion** | Handles `PDF`, `DOCX`, `MD`, and `TXT` formats. Converts all to a standard format and uses the **Mistral** OCR engine for text extraction from documents.                                    |
+| **Multi-Vector Indexing**       | Every chunk is indexed using **three distinct vector types**: Dense (`cli-MiniLM-L6-v2`), Sparse (`BM25`), and Late-Interaction (`ColBERTv2.0`). This ensures a powerful hybrid search that combines semantic context with keyword accuracy. |                                                                                                      |
 
 ## What Makes `optim-rag` Different
 
-optim-rag focuses on efficient management of embedded vector data. Instead of reprocessing all files, it only updates what has been changed. When users edit or add new contents, the system detects those changes and updates them selectively. This makes it a faster synchronization and smoother performance even with large data.
+optim-rag focuses on efficient management of embedded vector data. Instead of reprocessing all files, it only updates what has been changed. When users edit or add new contents, the system detects those changes and updates them selectively.
 
 This design is ideal for production setups where data changes frequently and precision in updating is key.
 
@@ -244,3 +243,18 @@ The MCP server will start and expose optim-rag’s tools to your connected clien
 > **Note:**
 > - Make sure if you have the environment activated if running the server in vanilla setup
 > - Since MCP integration is still experimental, expect rapid iteration and breaking changes.
+
+
+## Authors
+
+- [Swaraj Biswal](https://github.com/SWARAJ-42)
+- [Swadhin Biswal](https://github.com/swadhin505)  
+
+
+## Contributing
+
+If something here could be improved, please open an issue or submit a pull request.
+
+### License
+
+This project is licensed under the MIT License. See the `LICENSE` file for more details.
